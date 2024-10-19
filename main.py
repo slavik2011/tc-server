@@ -125,7 +125,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
                         driver.add_cookie(cookie)
         driver.get(task_url)
 
-        time.sleep(0.5)
+        time.sleep(2)
         bot_status = "Running... (Extracting text)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         target_div = driver.find_element(By.CLASS_NAME, "typable")  # Replace "typable" with the correct selector if needed.
