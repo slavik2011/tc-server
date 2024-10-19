@@ -29,8 +29,6 @@ COPY req.txt .
 # Update PATH for local bin
 ENV PATH="/home/root/.local/bin:${PATH}"
 
-RUN pip install PyXDG --break-system-packages
-
 # Install Python packages
 RUN pip install --no-cache-dir -r req.txt --break-system-packages
 
