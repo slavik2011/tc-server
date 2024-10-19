@@ -222,17 +222,11 @@
 
             const formData = new FormData(this);
 
-            fetch('/start', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                alert('An error occurred while starting the bot. Check the console for details.');
+            // Emit the start_bot event to the server with the form data
+            socket.emit('start_bot', {
+                task_link: formData.get('task_link'),
+                cps: formData.get('cps'),
+                cookies: formData.get('cookies')
             });
         });
     </script>
