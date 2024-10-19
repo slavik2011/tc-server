@@ -224,7 +224,7 @@ def send_requests(duration, cookies, url):
             unsuccessful_requests += 1  # Increment unsuccessful counter
 
         # Send POST request with cookies
-        post_data = {'data': 'exampleData'}  # Customize this as needed
+        '''post_data = {'data': 'exampleData'}  # Customize this as needed
         try:
             post_response = requests.post(url, json=post_data, cookies=cookies)
             print('POST Response Status Code:', post_response.status_code)
@@ -240,7 +240,7 @@ def send_requests(duration, cookies, url):
         except requests.exceptions.RequestException as e:
             print(f'Error sending POST request: {e}')
             socketio.emit('error', {'message': f'Error sending POST request: {e}'})
-            unsuccessful_requests += 1  # Increment unsuccessful counter
+            unsuccessful_requests += 1  # Increment unsuccessful counter'''
 
         # Emit the counts of successful and unsuccessful requests
         socketio.emit('update', {
