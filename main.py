@@ -28,7 +28,7 @@ def extract_text_from_html(html_content):
 
     # Handle any specific span replacements
     html_content = html_content.replace(
-        """<span class="token_unit  _clr"><span class="_enter"> </span><br></span>""",
+        """<span class="token_unit  _clr"><span class="_enter">&nbsp;</span><br></span>""",
         """<span class="token_unit  _clr">в</span>"""
     )
 
@@ -87,7 +87,7 @@ class Typer:
             symbols_typed += 1
 
             # Emit an update every 30 characters
-            if symbols_typed % self.cps == 0:
+            if symbols_typed % (self.cps // 2) == 0:
                 socketio.emit('update', {'typed': symbols_typed, 'left': total_symbols - symbols_typed, 'status': bot_status})
 
             # Introduce delay between keystrokes
