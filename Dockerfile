@@ -34,6 +34,9 @@ RUN wget https://selenium-release.storage.googleapis.com/3.141/IEDriverServer_Wi
     mv IEDriverServer.exe /usr/local/bin/ && \
     rm IEDriverServer_Win32_3.141.59.zip
 
+# Add IE Driver to PATH
+ENV PATH="/usr/local/bin:${PATH}"
+
 # Set the display port to avoid errors
 ENV DISPLAY=:99
 
