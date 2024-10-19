@@ -160,9 +160,9 @@ def start_typing_task(task_url, cookies_file, req_cps):
                 try:
                     f.write(driver.page_source)
                 except:
-                    bot_status = f"Finished!"
+                    bot_status = "Idle"
+                    socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': bot_status})
                     return 
-            socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': bot_status})
             driver.quit()
             bot_status = f"Finished ({download_link})"
             socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': bot_status})
