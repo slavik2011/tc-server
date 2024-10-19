@@ -151,12 +151,17 @@ def start_typing_task(task_url, cookies_file, req_cps):
         typer.type_text(text_to_type, driver)  # Call type_text with the driver
 
         # After typing, check for the finished lesson message
-        finished_div = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, '//div[@tabindex="2" and contains(@style, "height: 240px") and contains(text(), "Lesson finished")]'))
+        score_div = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, '//div[contains(@style, "font-family: Akrobat-Bold;") and contains(@style, "font-size: 5em;")]'))
         )
-        if finished_div:
+
+        if score_div:
             # Extract the text from the finished message
-            finished_message = finished_div.text
+            finished_message = score_div.text
+            soup = BeautifulSoup(finished_message, 'html.parser')
+
+            # Extract text
+            finished_message = soup.get_text()
             print(finished_message)  # Print to console for debugging
             socketio.emit('finished_message', {'message': finished_message})  # Emit to client
         
