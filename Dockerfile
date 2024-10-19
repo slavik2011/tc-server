@@ -5,17 +5,6 @@ ARG PORT=443
 FROM cypress/browsers:latest
 FROM e8kor/python-geckodriver-docker-image:latest
 
-# Install required packages
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    unzip \
-    wget \
-    xvfb \
-    curl \
-    gnupg2 \
-    && apt-get clean
-
 RUN apk add --no-cache firefox-esr
 
 # Install Geckodriver
