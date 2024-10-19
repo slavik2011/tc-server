@@ -38,7 +38,5 @@ ENV DISPLAY=:99
 # Copy the rest of the application code
 COPY . .
 
-USER airflow
-
 # Command to run your application
 CMD python3 main.py $PORT
