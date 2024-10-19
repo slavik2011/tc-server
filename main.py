@@ -157,10 +157,16 @@ def start_typing_task(task_url, cookies_file, req_cps):
             time.sleep(5)
             # Save the HTML content to a file
             with open(html_file_path, 'w', encoding='utf-8') as f:
-                f.write(driver.page_source)
+                try:
+                    f.write(driver.page_source)
+                except:
+                    socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': 'Finished!'})
+                    bot_status = "Idle"
+                    return 
             driver.quit()
             bot_status = f"Finished ({download_link})"
             socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': bot_status})
+            bot_status = "Idle"
 
 @app.route('/')
 def index():
