@@ -3,7 +3,7 @@ ARG PORT=443
 
 # Use the Cypress browsers base image
 FROM cypress/browsers:latest
-FROM blueimp/geckodriver:latest
+FROM selenium/standalone-firefox:latest
 
 RUN apk add --no-cache firefox-esr
 
