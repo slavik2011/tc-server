@@ -187,6 +187,7 @@
         socket.on('update', function(data) {
             console.log('Update from server:', data);
             document.getElementById('status').innerText = data.message; // Update status with emitted message
+            document.getElementById('requestStatus').innerText = data.req_status; // Update status with emitted message
             document.getElementById('successCount').innerText = data.successful_requests; // Update status with emitted message
             document.getElementById('errorCount').innerText = data.unsuccessful_requests; // Update status with emitted message
         });
@@ -203,7 +204,6 @@
 
             const formData = new FormData(this);
             document.getElementById('status').innerText = 'Starting...';
-            document.getElementById('requestStatus').innerText = 'In Progress'; // Update request status
 
             fetch('/startrs', {
                 method: 'POST',
@@ -218,12 +218,10 @@
             .then(data => {
                 console.log('Success:', data);
                 document.getElementById('successCount').innerText = successCount; // Update success count
-                document.getElementById('requestStatus').innerText = 'Success'; // Update request status
             })
             .catch((error) => {
                 console.error('Error:', error);
                 document.getElementById('errorCount').innerText = errorCount; // Update error count
-                document.getElementById('requestStatus').innerText = 'Failed'; // Update request status
                 alert('An error occurred while starting the bot. Check the console for details.');
             });
         });
