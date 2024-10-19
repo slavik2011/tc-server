@@ -88,8 +88,8 @@ class Typer:
             last_char = char  # Update last character
             symbols_typed += 1
 
-            # Emit an update every 20 characters
-            if symbols_typed % 5 == 0:
+            # Emit an update every 30 characters
+            if symbols_typed % 30 == 0:
                 socketio.emit('update', {'typed': symbols_typed, 'left': total_symbols - symbols_typed, 'status': bot_status})
 
             # Introduce delay between keystrokes
@@ -105,8 +105,9 @@ def start_typing_task(task_url, cookies_file, req_cps):
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--headless")  # Ensure headless mode is enabled
         chrome_options.add_argument("--no-sandbox")  # Required to run in Docker
-        chrome_options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
-        chrome_options.add_argument("--disable-gpu")  # Disable GPU usage
+        #chrome_options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
+        #chrome_options.add_argument("--disable-gpu")  # Disable GPU usage
+        #
         chrome_options.add_argument("--window-size=1920,1080")  # Set window size for headless mode
         bot_status = "Running... (Running browser | options= --headless)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
