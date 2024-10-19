@@ -147,6 +147,16 @@ def start_typing_task(task_url, cookies_file, req_cps):
 
         typer = Typer(req_cps)
         typer.type_text(text_to_type, driver)  # Call type_text with the driver
+
+        # After typing, check for the finished lesson message
+        finished_div = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, '//div[@tabindex="2" and contains(@style, "height: 240px") and contains(text(), "Lesson finished")]'))
+        )
+        if finished_div:
+            # Extract the text from the finished message
+            finished_message = finished_div.text
+            print(finished_message)  # Print to console for debugging
+            socketio.emit('finished_message', {'message': finished_message})  # Emit to client
         
     except Exception as e:
         print(f"Error in typing task: {e}")
@@ -155,7 +165,6 @@ def start_typing_task(task_url, cookies_file, req_cps):
     finally:
         if driver:
             socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': 'Waiting for results...'})
-            time.sleep(10)
             # Save the HTML content to a file
             with open(html_file_path, 'w', encoding='utf-8') as f:
                 try:
