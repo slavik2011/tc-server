@@ -11,7 +11,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 import sys
-import requests
+import requests, threading
 
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode='threading')  # Change async_mode to 'eventlet' for asyncio support
