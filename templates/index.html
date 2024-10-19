@@ -191,50 +191,56 @@
     </div>
 
     <script>
-        var socket = io();
+    var socket = io();
 
-        socket.on('connect', () => {
-            console.log('Connected to the server!');
+    socket.on('connect', () => {
+        console.log('Connected to the server!');
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Disconnected from the server.');
+    });
+
+    socket.on('update', function(data) {
+        document.getElementById('typed').innerText = data.typed;
+        document.getElementById('left').innerText = data.left;
+        document.getElementById('status').innerText = data.status;
+    });
+
+    socket.on('extracted', function(data) {
+        document.getElementById('extrtext').innerText = data.text;
+    });
+
+    socket.on('error', (data) => {
+        console.error('Error:', data.message);
+        document.getElementById('status').innerText = data.status;
+        alert('An error occurred: ' + data.message);
+    });
+
+    // New handler for finished message
+    socket.on('finished_message', function(data) {
+        alert('Finished: ' + data.message);  // Display the finished message in an alert
+        console.log('Finished message:', data.message);  // Log the message to the console
+    });
+
+    document.getElementById('startBotForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const formData = new FormData(this);
+
+        fetch('/start', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            alert('An error occurred while starting the bot. Check the console for details.');
         });
-
-        socket.on('disconnect', () => {
-            console.log('Disconnected from the server.');
-        });
-
-        socket.on('update', function(data) {
-            document.getElementById('typed').innerText = data.typed;
-            document.getElementById('left').innerText = data.left;
-            document.getElementById('status').innerText = data.status;
-        });
-
-        socket.on('extracted', function(data) {
-            document.getElementById('extrtext').innerText = data.text;
-        });
-
-        socket.on('error', (data) => {
-            console.error('Error:', data.message);
-            document.getElementById('status').innerText = data.status;
-            alert('An error occurred: ' + data.message);
-        });
-
-        document.getElementById('startBotForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const formData = new FormData(this);
-
-            fetch('/start', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                alert('An error occurred while starting the bot. Check the console for details.');
-            });
-        });
-    </script>
+    });
+</script>
 </body>
 </html>
