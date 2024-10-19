@@ -182,7 +182,7 @@ async def start_bot():
 
     # Check if the bot is already running
     if bot_status != "Idle":
-        await socketio.emit('error', {'message': 'A typing task is already running. Please wait until it finishes. Maybe someone else is typing now?'})
+        socketio.emit('error', {'message': 'A typing task is already running. Please wait until it finishes. Maybe someone else is typing now?'})
         return jsonify({'message': 'A typing task is already running. Please wait until it finishes. Maybe someone else is typing now?'}), 400
 
     if 'cookies' not in request.files or 'task_link' not in request.form:
@@ -199,7 +199,7 @@ async def start_bot():
     socketio.start_background_task(asyncio.create_task(start_typing_task(task_link, cookies_file_path, req_cps)))
     return jsonify({'message': 'Bot started successfully!'})
     
-async def send_requests(duration, cookies):
+def send_requests(duration, cookies):
     time_left = duration
 
     while time_left > 0:
@@ -207,10 +207,10 @@ async def send_requests(duration, cookies):
         try:
             options_response = requests.options(url, cookies=cookies)
             print('OPTIONS Response Status Code:', options_response.status_code)
-            await socketio.emit('update', {'message': 'OPTIONS request sent', 'status_code': options_response.status_code})  # Emit status
+            socketio.emit('update', {'message': 'OPTIONS request sent', 'status_code': options_response.status_code})
         except requests.exceptions.RequestException as e:
             print(f'Error sending OPTIONS request: {e}')
-            await socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})  # Emit error
+            socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})
 
         # Send POST request with cookies
         post_data = {'data': 'exampleData'}  # Customize this as needed
@@ -218,23 +218,22 @@ async def send_requests(duration, cookies):
             post_response = requests.post(url, json=post_data, cookies=cookies)
             print('POST Response Status Code:', post_response.status_code)
             print('POST Response Data:', post_response.json())  # Assuming the response is JSON
-            await socketio.emit('update', {'message': 'POST request sent', 'status_code': post_response.status_code, 'data': post_response.json()})  # Emit status
+            socketio.emit('update', {'message': 'POST request sent', 'status_code': post_response.status_code, 'data': post_response.json()})
         except requests.exceptions.RequestException as e:
             print(f'Error sending POST request: {e}')
-            await socketio.emit('error', {'message': f'Error sending POST request: {e}'})  # Emit error
+            socketio.emit('error', {'message': f'Error sending POST request: {e}'})
 
-        await asyncio.sleep(5)  # Wait for 5 seconds before the next request
+        time.sleep(5)  # Wait for 5 seconds before the next request
         time_left -= 5
         print(f'Time remaining: {time_left} seconds')
-        await socketio.emit('update', {'message': f'Time remaining: {time_left} seconds'})  # Emit time remaining
-
+        socketio.emit('update', {'message': f'Time remaining: {time_left} seconds'})
 
 @app.route('/rs')
 def rs_page():
     return render_template('rs.html')
-
+    
 @app.route('/startrs', methods=['POST'])
-async def start_rs_bot():
+def start_rs_bot():
     duration = int(request.form.get('duration', 0))  # Get duration from form
     cookie_file = request.files['cookies']  # Get the uploaded cookie file
 
@@ -253,14 +252,13 @@ async def start_rs_bot():
         except json.JSONDecodeError as e:
             return jsonify({'message': 'Invalid cookie file format', 'error': str(e)}), 400
 
-    # Start the async send_requests function as a background task
+    # Start the send_requests function as a background task
     socketio.start_background_task(send_requests, duration, cookies)
 
     # Emit that the bot has started
-    await socketio.emit('update', {'message': f'Bot started, duration: {duration} seconds'})
+    socketio.emit('update', {'message': f'Bot started, duration: {duration} seconds'})
     
     return jsonify({'message': 'Bot started', 'duration': duration})
-
 
 @app.route('/status', methods=['GET'])
 def get_status():
