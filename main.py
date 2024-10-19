@@ -201,6 +201,7 @@ async def start_bot():
     return jsonify({'message': 'Bot started successfully!'})
     
 def send_requests(duration, cookies, url):
+    url2 = 'https://tracking.rosettastone.com/ee/ce/lausd8264/users/4258406/path_step_scores?course=SK-ENG-L5-NA-PE-NA-NA-Y-3&unit_index=0&lesson_index=3&path_type=general&occurrence=1&method=get'
     time_left = duration
     successful_requests = 0  # Counter for successful requests
     unsuccessful_requests = 0  # Counter for unsuccessful requests
@@ -209,6 +210,30 @@ def send_requests(duration, cookies, url):
         # Send OPTIONS request with cookies
         try:
             options_response = requests.options(url, cookies=cookies)
+            print('OPTIONS Response Status Code:', options_response.status_code)
+            socketio.emit('update', {'message': 'OPTIONS request sent', 'status_code': options_response.status_code})
+
+            # Check response status and update the counter
+            if options_response.status_code == 200:
+                successful_requests += 1
+            else:
+                unsuccessful_requests += 1
+
+        except requests.exceptions.RequestException as e:
+            print(f'Error sending OPTIONS request: {e}')
+            socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})
+            unsuccessful_requests += 1  # Increment unsuccessful counter
+
+        try:
+            params = {
+                'course': 'SK-ENG-L5-NA-PE-NA-NA-Y-3',
+                'unit_index': '0',
+                'lesson_index': '3',
+                'path_type': 'general',
+                'occurrence': '1',
+                'method': 'get'
+            }
+            options_response = requests.options(url2, cookies=cookies, params=params)
             print('OPTIONS Response Status Code:', options_response.status_code)
             socketio.emit('update', {'message': 'OPTIONS request sent', 'status_code': options_response.status_code})
 
