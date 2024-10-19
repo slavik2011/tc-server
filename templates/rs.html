@@ -157,6 +157,9 @@
 
         <div class="info-box">
             <p>Status: <span id="status">Idle</span></p>
+            <p>Last Request Status: <span id="requestStatus">None</span></p> <!-- New label for request status -->
+            <p>Success Count: <span id="successCount">0</span></p> <!-- New label for successful requests -->
+            <p>Error Count: <span id="errorCount">0</span></p> <!-- New label for unsuccessful requests -->
         </div>
 
         <div class="mgr"></div>
@@ -174,42 +177,57 @@
         </form>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
-<script>
-    const socket = io(); // Initialize Socket.IO
+    <script>
+        const socket = io(); // Initialize Socket.IO
 
-    // Listen for update messages from the server
-    socket.on('update', function(data) {
-        console.log('Update from server:', data);
-        document.getElementById('status').innerText = data.message; // Update status with emitted message
-    });
+        let successCount = 0;
+        let errorCount = 0;
 
-    socket.on('error', function(data) {
-        console.error('Error from server:', data);
-        alert(`Error: ${data.message}`); // Display error message
-    });
-
-    document.getElementById('startBotForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-
-        const formData = new FormData(this);
-        document.getElementById('status').innerText = 'Starting...';
-
-        fetch('/startrs', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Success:', data);
-            // The bot starting message will be handled by the socket.on('update') listener
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-            alert('An error occurred while starting the bot. Check the console for details.');
+        // Listen for update messages from the server
+        socket.on('update', function(data) {
+            console.log('Update from server:', data);
+            document.getElementById('status').innerText = data.message; // Update status with emitted message
         });
-    });
-</script>
+
+        socket.on('error', function(data) {
+            console.error('Error from server:', data);
+            errorCount++;
+            document.getElementById('errorCount').innerText = errorCount; // Update error count
+            alert(`Error: ${data.message}`); // Display error message
+        });
+
+        document.getElementById('startBotForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+            document.getElementById('status').innerText = 'Starting...';
+            document.getElementById('requestStatus').innerText = 'In Progress'; // Update request status
+
+            fetch('/startrs', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+                successCount++;
+                document.getElementById('successCount').innerText = successCount; // Update success count
+                document.getElementById('requestStatus').innerText = 'Success'; // Update request status
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                errorCount++;
+                document.getElementById('errorCount').innerText = errorCount; // Update error count
+                document.getElementById('requestStatus').innerText = 'Failed'; // Update request status
+                alert('An error occurred while starting the bot. Check the console for details.');
+            });
+        });
+    </script>
 
 </body>
 </html>
