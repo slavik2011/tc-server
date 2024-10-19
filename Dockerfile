@@ -20,6 +20,23 @@ ENV PATH="/home/root/.local/bin:${PATH}"
 # Install Python packages
 RUN pip install --no-cache-dir -r req.txt --break-system-packages
 
+# Install required packages
+RUN apt-get update && \
+    apt-get install -y \
+    unzip \
+    wget \
+    xvfb \
+    && apt-get clean
+
+# Install Internet Explorer Driver
+RUN wget https://selenium-release.storage.googleapis.com/3.141/IEDriverServer_Win32_3.141.59.zip && \
+    unzip IEDriverServer_Win32_3.141.59.zip && \
+    mv IEDriverServer.exe /usr/local/bin/ && \
+    rm IEDriverServer_Win32_3.141.59.zip
+
+# Set the display port to avoid errors
+ENV DISPLAY=:99
+
 # Copy the rest of the application code
 COPY . .
 
