@@ -1,6 +1,6 @@
 ARG PORT=443
 FROM cypress/browsers:latest
-RUN apt-get install python 3 -y
+RUN apt-get install python3 -y
 RUN echo $(python3 -m site --user_base)
 COPY req.txt .
 ENV PATH /home/root/.local/bin:${PATH}
