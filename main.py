@@ -18,6 +18,7 @@ socketio = SocketIO(app, async_mode='threading')  # Change async_mode to 'eventl
 
 bot_status = "Idle"
 total_symbols = 0
+url = 'https://lcp.rosettastone.com/api/v3/session/heartbeat'
 
 def extract_text_from_html(html_content):
     # Replace non-breaking spaces in the raw HTML first
