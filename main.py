@@ -15,6 +15,12 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import sys
+import requests
+
+app = Flask(__name__)
+
+# URL to send requests to (change as needed)
+url = 'https://lcp.rosettastone.com/api/v3/session/heartbeat'
 
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode='threading')
@@ -205,6 +211,68 @@ def start_bot():
     # Start the typing task in the background
     socketio.start_background_task(start_typing_task, task_link, cookies_file_path, req_cps)
     return jsonify({'message': 'Bot started successfully!'})
+
+def send_requests(duration, cookies):
+    time_left = duration
+
+    while time_left > 0:
+        # Send OPTIONS request with cookies
+        try:
+            options_response = requests.options(url, cookies=cookies)
+            print('OPTIONS Response Status Code:', options_response.status_code)
+            socketio.emit('update', {'message': 'OPTIONS request sent', 'status_code': options_response.status_code})  # Emit status
+        except requests.exceptions.RequestException as e:
+            print(f'Error sending OPTIONS request: {e}')
+            socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})  # Emit error
+
+        # Send POST request with cookies
+        post_data = {'data': 'exampleData'}  # Customize this as needed
+        try:
+            post_response = requests.post(url, json=post_data, cookies=cookies)
+            print('POST Response Status Code:', post_response.status_code)
+            print('POST Response Data:', post_response.json())  # Assuming the response is JSON
+            socketio.emit('update', {'message': 'POST request sent', 'status_code': post_response.status_code, 'data': post_response.json()})  # Emit status
+        except requests.exceptions.RequestException as e:
+            print(f'Error sending POST request: {e}')
+            socketio.emit('error', {'message': f'Error sending POST request: {e}'})  # Emit error
+
+        time.sleep(5)  # Wait for 5 seconds before the next request
+        time_left -= 5
+        print(f'Time remaining: {time_left} seconds')
+        socketio.emit('update', {'message': f'Time remaining: {time_left} seconds'})  # Emit time remaining
+
+@app.route('/rs')
+def rs_page():
+    return render_template('rs.html')
+
+@app.route('/startrs', methods=['POST'])
+def start_bot():
+    duration = int(request.form.get('duration', 0))  # Get duration from form
+    cookie_file = request.files['cookies']  # Get the uploaded cookie file
+
+    if duration <= 0:
+        return jsonify({'message': 'Invalid duration'}), 400
+
+    # Read cookies from the uploaded JSON file
+    cookies = {}
+    if cookie_file:
+        try:
+            cookie_data = json.load(cookie_file)  # Load the JSON data
+            for cookie in cookie_data:
+                name = cookie['name']
+                value = cookie['value']
+                cookies[name] = value
+        except json.JSONDecodeError as e:
+            return jsonify({'message': 'Invalid cookie file format', 'error': str(e)}), 400
+
+    # Start a new thread for sending requests
+    threading.Thread(target=send_requests, args=(duration, cookies), daemon=True).start()
+
+    # Emit that the bot has started
+    socketio.emit('update', {'message': 'Bot started', 'duration': duration})
+    
+    return jsonify({'message': 'Bot started', 'duration': duration})
+
 
 @app.route('/status', methods=['GET'])
 def get_status():
