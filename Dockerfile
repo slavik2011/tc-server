@@ -4,7 +4,7 @@ ARG PORT=443
 # Use the Cypress browsers base image
 FROM cypress/browsers:latest
 FROM apache/airflow:2.1.4
-
+USER root
 # Install required packages
 RUN apt-get update && apt-get install -y \
     python3 \
@@ -16,7 +16,6 @@ RUN apt-get update && apt-get install -y \
     gnupg2 \
     && apt-get clean
 
-USER root
 RUN apt-get update                             \
  && apt-get install -y --no-install-recommends \
     ca-certificates curl firefox-esr           \
