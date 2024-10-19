@@ -246,7 +246,7 @@ def rs_page():
     return render_template('rs.html')
 
 @app.route('/startrs', methods=['POST'])
-def start_bot():
+def start_rs_bot():
     duration = int(request.form.get('duration', 0))  # Get duration from form
     cookie_file = request.files['cookies']  # Get the uploaded cookie file
 
