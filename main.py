@@ -170,4 +170,4 @@ def start_bot():
     return jsonify({'message': 'Bot started successfully!'})
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True, port=int(sys.argv[1]), host='0.0.0.0')
