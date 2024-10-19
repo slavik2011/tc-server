@@ -149,10 +149,12 @@ def start_typing_task(task_url, cookies_file, req_cps):
     finally:
         if driver:
             socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': 'Waiting for results...'})
-            time.sleep(7)
-            driver.quit()
-            bot_status = "Finished"
-            socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': bot_status})
+            original_url = driver.current_url
+            if wait_for_redirect(driver, original_url):
+                print(driver.page_source)
+                driver.quit()
+                bot_status = "Finished"
+                socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': bot_status})
 
 @app.route('/')
 def index():
