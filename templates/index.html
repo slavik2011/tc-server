@@ -21,10 +21,6 @@
             background-size: 200% 200%;
         }
 
-        .mgr {
-            margin-bottom: 40px; /* Adds space below each paragraph */
-        }
-
         @keyframes gradientBackground {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -172,8 +168,6 @@
             <p>Extracted text (в means enter): <span id="extrtext">start to see</span></p>
         </div>
 
-        <div class="mgr"></div>
-
         <form id="startBotForm" enctype="multipart/form-data">
             <label for="task_link">Task Link:</label>
             <input type="text" id="task_link" name="task_link" required>
@@ -184,7 +178,7 @@
             <label for="cookies">Upload Cookies:</label>
             <input type="file" id="cookies" name="cookies" required>
 
-            <label for="cookies">By clicking "Start", you agree that you read <a href="/whyicreatedthat" target="_blank" style="color: inherit; text-decoration: underline;">purpose of creating</a> and understand your rights of using.</label>
+            <label for="cookies">By clicking "Start", you agreeing that you read <a href="/whyicreatedthat" target="_blank" style="color: inherit; text-decoration: underline;">purpose of creating</a> and understand your rights of using.</label>
 
             <button type="submit">Start</button>
         </form>
@@ -222,11 +216,17 @@
 
             const formData = new FormData(this);
 
-            // Emit the start_bot event to the server with the form data
-            socket.emit('start_bot', {
-                task_link: formData.get('task_link'),
-                cps: formData.get('cps'),
-                cookies: formData.get('cookies')
+            fetch('/start', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('An error occurred while starting the bot. Check the console for details.');
             });
         });
     </script>
