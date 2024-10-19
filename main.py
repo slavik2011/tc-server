@@ -15,7 +15,7 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import sys
-import requests
+import requests, threading
 
 app = Flask(__name__)
 
