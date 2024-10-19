@@ -3,7 +3,6 @@ ARG PORT=443
 
 # Use the Cypress browsers base image
 FROM cypress/browsers:latest
-FROM rapidfort/python-chromedriver
 
 # Install Python 3
 RUN apt-get update && apt-get install -y python3 python3-pip
@@ -25,16 +24,20 @@ RUN apt-get update && \
     apt-get install -y \
     unzip \
     wget \
-    xvfb \
+    firefox \
     && apt-get clean
+    
+RUN apt-get install -y firefox
 
-# Install Internet Explorer Driver
-RUN wget https://selenium-release.storage.googleapis.com/3.141/IEDriverServer_Win32_3.141.59.zip && \
-    unzip IEDriverServer_Win32_3.141.59.zip && \
-    mv IEDriverServer.exe /usr/local/bin/ && \
-    rm IEDriverServer_Win32_3.141.59.zip
+# Install GeckoDriver
+RUN GECKODRIVER_VERSION=v0.30.0 && \
+    wget https://github.com/mozilla/geckodriver/releases/download/${GECKODRIVER_VERSION}/geckodriver-${GECKODRIVER_VERSION}-linux64.tar.gz && \
+    tar -xvzf geckodriver-${GECKODRIVER_VERSION}-linux64.tar.gz && \
+    mv geckodriver /usr/local/bin/ && \
+    chmod +x /usr/local/bin/geckodriver && \
+    rm geckodriver-${GECKODRIVER_VERSION}-linux64.tar.gz
 
-# Add IE Driver to PATH
+# Add GeckoDriver to PATH
 ENV PATH="/usr/local/bin:${PATH}"
 
 # Set the display port to avoid errors
