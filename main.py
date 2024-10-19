@@ -123,6 +123,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         driver.get(task_url)
 
+        # Load cookies if provided
         if os.path.exists(cookies_file):
             with open(cookies_file, 'r') as f:
                 cookies = json.load(f)
@@ -135,55 +136,47 @@ def start_typing_task(task_url, cookies_file, req_cps):
         bot_status = "Running... (Extracting text)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         
-        target_div = driver.find_element(By.CLASS_NAME, "typable")  # Replace "typable" with the correct selector if needed.
-        html_content = target_div.get_attribute('outerHTML')
-        text_to_type = extract_text_from_html(html_content)
-        socketio.emit('extracted', {'text': text_to_type})
-
-        # Create a download link
-        download_link = f"/download/{html_file_path}"
-        socketio.emit('download_link', {'link': download_link})
-
-        bot_status = "Running... (Typing!)"
-        socketio.emit('update', {'typed': 0, 'left': len(text_to_type), 'status': bot_status})
-
-        typer = Typer(req_cps)
-        typer.type_text(text_to_type, driver)  # Call type_text with the driver
-
-        # After typing, check for the finished lesson message
+        # Locate the target div using the improved XPath search
         score_div = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, '//div[contains(@style, "font-family: Akrobat-Bold;") and contains(@style, "font-size: 5em;")]'))
         )
 
         if score_div:
-            # Extract the text from the finished message
-            finished_message = score_div.text
-            soup = BeautifulSoup(finished_message, 'html.parser')
+            # Extract the text from the located div
+            html_content = score_div.get_attribute('outerHTML')
+            text_to_type = extract_text_from_html(html_content)
+            socketio.emit('extracted', {'text': text_to_type})
 
-            # Extract text
-            finished_message = soup.get_text()
-            print(finished_message)  # Print to console for debugging
-            socketio.emit('finished_message', {'message': finished_message})  # Emit to client
-        
+            # Create a download link for the extracted HTML
+            download_link = f"/download/{html_file_path}"
+            socketio.emit('download_link', {'link': download_link})
+
+            bot_status = "Running... (Typing!)"
+            socketio.emit('update', {'typed': 0, 'left': len(text_to_type), 'status': bot_status})
+
+            # Start typing using the Typer class
+            typer = Typer(req_cps)
+            typer.type_text(text_to_type, driver)  # Call type_text with the driver
+
+        bot_status = "Waiting for results..."
     except Exception as e:
         print(f"Error in typing task: {e}")
         bot_status = "Error"
         socketio.emit('error', {'message': str(e), 'status': bot_status})
-        bot_status = "Idle"
     finally:
         if driver:
-            socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': 'Waiting for results...'})
             # Save the HTML content to a file
             with open(html_file_path, 'w', encoding='utf-8') as f:
                 try:
                     f.write(driver.page_source)
-                except:
-                    bot_status = "Idle"
-                    socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': bot_status})
-                    return 
+                except Exception as e:
+                    print(f"Error saving HTML: {e}")
             driver.quit()
-            bot_status = f"Finished ({download_link})"
-            socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': bot_status})
+
+            # Emit the download link and final status update
+            socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': 'Finished'})
+            socketio.emit('download_link', {'link': f"/download/{html_file_path}"})
+            bot_status = "Idle"
 
 @app.route('/')
 def index():
