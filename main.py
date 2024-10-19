@@ -103,11 +103,13 @@ def start_typing_task(task_url, cookies_file, req_cps):
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         socketio.emit('extracted', {'text': 'not loaded yet'})
         chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument("--headless")  # Ensure headless mode is enabled
-        chrome_options.add_argument("--no-sandbox")  # Required to run in Docker
-        #chrome_options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--disable-application-cache")
+        chrome_options.add_argument("--disk-cache-size=1")
         chrome_options.add_argument("--disable-gpu")
-        #
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--force-device-scale-factor=0.5")
         chrome_options.add_argument("--window-size=1920,1080")  # Set window size for headless mode
         bot_status = "Running... (Running browser | options= --headless)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
