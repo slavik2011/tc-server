@@ -30,7 +30,7 @@ COPY req.txt .
 ENV PATH="/home/root/.local/bin:${PATH}"
 
 # Install Python packages
-RUN pip install --no-cache-dir -r req.txt --break-system-packages
+RUN pip install --no-cache-dir -r req.txt
 
 # Set the display port to avoid errors
 ENV DISPLAY=:99
