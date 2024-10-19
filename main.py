@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.chrome.options import Options as ChromeOptions
 import sys
 
 app = Flask(__name__)
@@ -107,7 +108,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
 
         # Set up Chrome options
-        options = Options()
+        options = ChromeOptions()
         options.add_argument("--headless")
         options.add_argument("--disable-extensions")
         options.add_argument("--disable-application-cache")
