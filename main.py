@@ -106,8 +106,21 @@ def start_typing_task(task_url, cookies_file, req_cps):
         bot_status = "Running... (Running browser)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
 
-        # Initialize the IE driver
-        driver = webdriver.Ie(executable_path='path_to_your_IEDriverServer.exe', desired_capabilities=capabilities)
+        # Set up Chrome options
+        options = Options()
+        options.add_argument("--headless")
+        options.add_argument("--disable-extensions")
+        options.add_argument("--disable-application-cache")
+        options.add_argument("--disk-cache-size=1")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--force-device-scale-factor=1")
+
+        bot_status = "Running... (Running browser | options= --headless)"
+        socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
+        
+        # Initialize the Chrome driver with the specified options
+        driver = webdriver.Chrome(service=ChromeService(), options=options)
 
         bot_status = "Running... (Opening page)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
