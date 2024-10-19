@@ -199,7 +199,7 @@ async def start_bot():
     socketio.start_background_task(asyncio.create_task(start_typing_task(task_link, cookies_file_path, req_cps)))
     return jsonify({'message': 'Bot started successfully!'})
     
-def send_requests(duration, cookies):
+def send_requests(duration, cookies, url):
     time_left = duration
 
     while time_left > 0:
@@ -234,6 +234,7 @@ def rs_page():
     
 @app.route('/startrs', methods=['POST'])
 def start_rs_bot():
+    global url
     duration = int(request.form.get('duration', 0))  # Get duration from form
     cookie_file = request.files['cookies']  # Get the uploaded cookie file
 
@@ -253,7 +254,7 @@ def start_rs_bot():
             return jsonify({'message': 'Invalid cookie file format', 'error': str(e)}), 400
 
     # Start the send_requests function as a background task
-    socketio.start_background_task(send_requests, duration, cookies)
+    socketio.start_background_task(send_requests, duration, cookies, url)
 
     # Emit that the bot has started
     socketio.emit('update', {'message': f'Bot started, duration: {duration} seconds'})
