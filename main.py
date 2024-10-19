@@ -6,7 +6,6 @@ import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import time
-import pyautogui
 import random
 from bs4 import BeautifulSoup
 from selenium.webdriver.chrome.options import ChromiumOptions
