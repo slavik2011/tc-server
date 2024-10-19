@@ -176,4 +176,4 @@ def get_status():
     return jsonify({'status': bot_status})
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, port=int(sys.argv[1]))
+    socketio.run(app, debug=True, port=int(sys.argv[1]), host='0.0.0.0')
