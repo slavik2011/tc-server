@@ -187,6 +187,8 @@
         socket.on('update', function(data) {
             console.log('Update from server:', data);
             document.getElementById('status').innerText = data.message; // Update status with emitted message
+            document.getElementById('successCount').innerText = data.successful_requests; // Update status with emitted message
+            document.getElementById('errorCount').innerText = data.unsuccessful_requests; // Update status with emitted message
         });
 
         socket.on('error', function(data) {
@@ -215,13 +217,11 @@
             })
             .then(data => {
                 console.log('Success:', data);
-                successCount++;
                 document.getElementById('successCount').innerText = successCount; // Update success count
                 document.getElementById('requestStatus').innerText = 'Success'; // Update request status
             })
             .catch((error) => {
                 console.error('Error:', error);
-                errorCount++;
                 document.getElementById('errorCount').innerText = errorCount; // Update error count
                 document.getElementById('requestStatus').innerText = 'Failed'; // Update request status
                 alert('An error occurred while starting the bot. Check the console for details.');
