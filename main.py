@@ -169,5 +169,13 @@ def start_bot():
     socketio.start_background_task(start_typing_task, task_link, cookies_file_path, req_cps)
     return jsonify({'message': 'Bot started successfully!'})
 
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/whyicreatedthat')
+def whypage():
+    return render_template('why.html')
+
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=int(sys.argv[1]), host='0.0.0.0')
