@@ -23,7 +23,6 @@ RUN apt-get update                             \
  && rm -fr /var/lib/apt/lists/*                \
  && curl -L https://github.com/mozilla/geckodriver/releases/download/v0.30.0/geckodriver-v0.30.0-linux64.tar.gz | tar xz -C /usr/local/bin \
  && apt-get purge -y ca-certificates curl
-USER airflow
 
 # Copy requirements file
 COPY req.txt .
@@ -41,6 +40,8 @@ ENV DISPLAY=:99
 
 # Copy the rest of the application code
 COPY . .
+
+USER airflow
 
 # Command to run your application
 CMD python3 main.py $PORT
