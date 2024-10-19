@@ -71,7 +71,7 @@ class Typer:
         last_char = None
 
         for char in text:
-            print(f'Typing character: "{char}"')  # Debugging
+            #print(f'Typing character: "{char}"')  # Debugging
 
             # Only type a space if it's not following another space
             if char == " " and last_char == " ":
