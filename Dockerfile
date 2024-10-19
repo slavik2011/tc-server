@@ -8,12 +8,12 @@ ENV PATH /home/root/.local/bin:${PATH}
 COPY req.txt .
 
 # Update system and install dependencies
-RUN apt-get update && \
-    apt-get install -y python3-pip && \
-    apt-get install -y --no-install-recommends gcc && \
+RUN apt update && \
+    apt install -y python3-pip && \
+    apt install -y --no-install-recommends gcc && \
     pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r req.txt && \
-    apt-get clean && \
+    apt clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy the rest of the application code
