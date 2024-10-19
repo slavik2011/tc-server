@@ -166,6 +166,10 @@ def start_typing_task(task_url, cookies_file, req_cps):
 def index():
     return render_template('index.html')
 
+@app.route('/whyicreatedthat')
+def whypage():
+    return render_template('why.html')
+
 @app.route('/start', methods=['POST'])
 def start_bot():
     global bot_status
