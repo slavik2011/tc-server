@@ -5,26 +5,141 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Typing Bot (created by slvreal)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            animation: gradientBackground 10s ease infinite;
+            background-size: 200% 200%;
+        }
+
+        @keyframes gradientBackground {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        h1 {
+            color: #ffffff;
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 2s ease;
+        }
+
+        p {
+            font-size: 1.2rem;
+        }
+
+        #status {
+            font-weight: bold;
+        }
+
+        .info-box {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            animation: popUp 1s ease;
+        }
+
+        .info-box p {
+            margin: 10px 0;
+            font-size: 1.1rem;
+        }
+
+        @keyframes popUp {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        form {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            animation: fadeIn 2s ease;
+        }
+
+        form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #f0f0f0;
+        }
+
+        form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        form input:focus {
+            border-color: #74ebd5;
+            box-shadow: 0 0 10px rgba(116, 235, 213, 0.5);
+        }
+
+        form button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        form button:hover {
+            background-color: #45a049;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
 </head>
 <body>
-    <h1>Typing Bot</h1>
-    <p>Typed: <span id="typed">0</span></p>
-    <p>Left: <span id="left">0</span></p>
-    <p>Status: <span id="status">Idle</span></p>
-    <p>Extracted text (в means enter): <span id="extrtext">start to see</span></p>
+    <div class="container">
+        <h1>Typing Bot</h1>
 
-    <form id="startBotForm" enctype="multipart/form-data">
-        <label for="task_link">Task Link:</label>
-        <input type="text" id="task_link" name="task_link" required><br>
+        <div class="info-box">
+            <p>Typed: <span id="typed">0</span></p>
+            <p>Left: <span id="left">0</span></p>
+            <p>Status: <span id="status">Idle</span></p>
+            <p>Extracted text (в means enter): <span id="extrtext">start to see</span></p>
+        </div>
 
-        <label for="task_link">CPS (clicks per second) (values more than 15 can cause ban):</label>
-        <input type="number" id="cps" name="cps" required><br>
+        <form id="startBotForm" enctype="multipart/form-data">
+            <label for="task_link">Task Link:</label>
+            <input type="text" id="task_link" name="task_link" required>
 
-        <label for="cookies">Upload Cookies:</label>
-        <input type="file" id="cookies" name="cookies" required><br>
+            <label for="cps">CPS (clicks per second) (values more than 15 can cause ban):</label>
+            <input type="number" id="cps" name="cps" required min="1" max="15">
 
-        <button type="submit">Start Bot</button>
-    </form>
+            <label for="cookies">Upload Cookies:</label>
+            <input type="file" id="cookies" name="cookies" required>
+
+            <button type="submit">Start Bot</button>
+        </form>
+    </div>
 
     <script>
         var socket = io();
