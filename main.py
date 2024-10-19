@@ -124,7 +124,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         
         # Initialize the Chrome driver with the specified options
-        driver = webdriver.Chrome(service=ChromeService(), options=options)
+        driver = webdriver.Chrome(service=ChromeService(), options=chrome_options)
 
         bot_status = "Running... (Opening page)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
