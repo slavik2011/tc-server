@@ -170,28 +170,27 @@ def index():
 def whypage():
     return render_template('why.html')
 
-@app.route('/start', methods=['POST'])
-def start_bot():
+@socketio.on('start_bot')
+def start_bot(data):
     client_id = request.sid  # Get the unique session ID of the client
 
     # Check if the bot is already running for this client
     if client_id in client_status and client_status[client_id] != "Idle":
-        socketio.emit('error', {'message': 'A typing task is already running. Please wait until it finishes. Maybe someone else is typing now?'}, room=client_id)
-        return jsonify({'message': 'A typing task is already running. Please wait until it finishes. Maybe someone else is typing now?'}), 400
+        emit('error', {'message': 'A typing task is already running. Please wait until it finishes. Maybe someone else is typing now?'})
+        return
 
-    if 'cookies' not in request.files or 'task_link' not in request.form:
-        return "Cookies file and task link are required!", 400
+    cookies_file = data.get('cookies')
+    task_link = data.get('task_link')
+    req_cps = int(data.get('cps'))
 
-    cookies_file = request.files['cookies']
-    task_link = request.form['task_link']
-    req_cps = int(request.form['cps'])
-
+    # Save the cookies file to disk
     cookies_file_path = os.path.join('cookies.json')
-    cookies_file.save(cookies_file_path)
+    with open(cookies_file_path, 'wb') as f:
+        f.write(cookies_file.read())
 
     # Start the typing task in the background
     socketio.start_background_task(start_typing_task, task_link, cookies_file_path, req_cps, client_id)
-    return jsonify({'message': 'Bot started successfully!'})
+    emit('message', {'message': 'Bot started successfully!'})
 
 @app.route('/status', methods=['GET'])
 def get_status():
