@@ -153,7 +153,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
             time.sleep(7)
             # Save the HTML content to a file
             with open(html_file_path, 'w', encoding='utf-8') as f:
-                f.write(html_content)
+                f.write(driver.page_source)
             driver.quit()
             bot_status = f"Finished ({download_link})"
             socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': bot_status})
