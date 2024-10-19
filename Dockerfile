@@ -40,4 +40,4 @@ ENV PATH="/usr/local/bin:${PATH}"
 COPY . .
 
 # Command to run your application
-CMD ["python3", "main.py", "${PORT}"]
+CMD python main.py $PORT
