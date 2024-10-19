@@ -148,12 +148,13 @@ def start_typing_task(task_url, cookies_file, req_cps):
         typer = Typer(req_cps)
         typer.type_text(text_to_type, driver)  # Call type_text with the driver
 
-        bot_status = "Waiting for results..."
-
         # Locate the target div using the improved XPath search
-        element = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "st0 st7 st24"))
-        )
+        #element = WebDriverWait(driver, 10).until(
+        #    EC.presence_of_element_located((By.CLASS_NAME, "st0 st7 st24"))
+        #)
+        for i in range(10):
+            bot_status = f"Waiting for results ({10-i} seconds)..."
+            time.sleep(1)
     except Exception as e:
         print(f"Error in typing task: {e}")
         bot_status = "Error"
