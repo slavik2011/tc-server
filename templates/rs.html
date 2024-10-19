@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Bot (created by slvreal)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(90deg, rgba(12,69,8,1) 0%, rgba(20,147,31,1) 50%, rgba(8,69,9,1) 100%);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-y: scroll; /* Enable vertical scrolling */
+            animation: gradientBackground 10s ease infinite;
+            background-size: 200% 200%;
+        }
+
+        .mgr {
+            margin-bottom: 40px; /* Adds space below each paragraph */
+        }
+
+        @keyframes gradientBackground {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Floating top banner */
+        .floating-banner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            animation: slideDown 1s ease-out;
+            z-index: 100;
+        }
+
+        @keyframes slideDown {
+            from { top: -150px; }
+            to { top: 0; }
+        }
+
+        .banner-text {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        h1 {
+            color: #ffffff;
+            font-size: 2.5rem;
+            margin-top: 180px; /* Adjusted margin to account for the floating banner */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 2s ease;
+            text-align: center;
+        }
+
+        .info-box {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            animation: popUp 1s ease;
+            text-align: center;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        @keyframes popUp {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        form {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            animation: fadeIn 2s ease;
+            text-align: center;
+            margin: 0 auto;
+        }
+
+        form label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #f0f0f0;
+        }
+
+        form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            transition: all 0.3s;
+            box-sizing: border-box;
+        }
+
+        form input:focus {
+            border-color: #74ebd5;
+            box-shadow: 0 0 10px rgba(116, 235, 213, 0.5);
+        }
+
+        form button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        form button:hover {
+            background-color: #45a049;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating banner at the top -->
+    <div class="floating-banner">
+        <div class="banner-text">
+            This typing bot was created by slvreal. Read 
+            <a href="/whyicreatedthat" target="_blank" style="color: inherit; text-decoration: underline;">purpose of creating</a>.
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Typing Bot</h1>
+
+        <div class="info-box">
+            <p>Status: <span id="status">Idle</span></p>
+        </div>
+
+        <div class="mgr"></div>
+
+        <form id="startBotForm" enctype="multipart/form-data">
+            <label for="cookies">Upload Cookies:</label>
+            <input type="file" id="cookies" name="cookies" required>
+
+            <label for="duration">Duration (seconds):</label>
+            <input type="number" id="duration" name="duration" required min="1">
+
+            <label for="cookies">By clicking "Start", you agree that you read <a href="/whyicreatedthat" target="_blank" style="color: inherit; text-decoration: underline;">purpose of creating</a> and understand your rights of using.</label>
+
+            <button type="submit">Start</button>
+        </form>
+    </div>
+
+    <script>
+    document.getElementById('startBotForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const formData = new FormData(this);
+        document.getElementById('status').innerText = 'Starting...';
+
+        fetch('/startrs', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            document.getElementById('status').innerText = 'Bot Started';
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            alert('An error occurred while starting the bot. Check the console for details.');
+        });
+    });
+    </script>
+</body>
+</html>
