@@ -174,6 +174,11 @@ def whypage():
 def start_bot():
     global bot_status
 
+    # Check if the bot is already running
+    if bot_status != "Idle":
+        socketio.emit('error', {'message': 'A typing task is already running. Please wait until it finishes. Maybe someone else is typing now?'})
+        return jsonify({'message': 'A typing task is already running. Please wait until it finishes. Maybe someone else is typing now?'}), 400
+
     if 'cookies' not in request.files or 'task_link' not in request.form:
         return "Cookies file and task link are required!", 400
 
@@ -184,7 +189,8 @@ def start_bot():
     cookies_file_path = os.path.join('cookies.json')
     cookies_file.save(cookies_file_path)
 
-    socketio.start_background_task(start_typing_task, task_link, cookies_file_path, req_cps) # Correct way to start
+    # Start the typing task in the background
+    socketio.start_background_task(start_typing_task, task_link, cookies_file_path, req_cps)
     return jsonify({'message': 'Bot started successfully!'})
 
 @app.route('/status', methods=['GET'])
