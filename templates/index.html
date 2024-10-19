@@ -15,10 +15,14 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-y: scroll; /* Enable vertical scrolling */
             animation: gradientBackground 10s ease infinite;
             background-size: 200% 200%;
+        }
+
+        .mgr {
+            margin-bottom: 40px; /* Adds space below each paragraph */
         }
 
         @keyframes gradientBackground {
@@ -68,14 +72,11 @@
         p {
             font-size: 1.2rem;
             text-align: center;
+            margin-bottom: 20px; /* Spacing between paragraphs */
         }
 
         #status {
             font-weight: bold;
-        }
-
-        .mgr {
-            margin-bottom: 40px; /* Adds space below each paragraph */
         }
 
         .info-box {
@@ -87,11 +88,6 @@
             text-align: center;
             max-width: 500px;
             margin: 0 auto;
-        }
-
-        .info-box p {
-            margin: 10px 0;
-            font-size: 1.1rem;
         }
 
         @keyframes popUp {
@@ -162,7 +158,7 @@
     <div class="floating-banner">
         <div class="banner-text">
             This typing bot was created by slvreal. Read 
-            <a href="file:///C:/Users/user/PycharmProjects/aitest/tc-server/templates/why.html" target="_blank" style="color: inherit; text-decoration: underline;">purpose of creating</a>
+            <a href="/whyicreatedthat" target="_blank" style="color: inherit; text-decoration: underline;">purpose of creating</a>
         </div>
     </div>
 
@@ -182,13 +178,15 @@
             <label for="task_link">Task Link:</label>
             <input type="text" id="task_link" name="task_link" required>
 
-            <label for="cps">CPS (clicks per second) (values more than 15 can cause ban):</label>
-            <input type="number" id="cps" name="cps" required min="1" max="15">
+            <label for="cps">CPS (clicks per second) (values more than 25 can cause ban):</label>
+            <input type="number" id="cps" name="cps" required min="1" max="25">
 
             <label for="cookies">Upload Cookies:</label>
             <input type="file" id="cookies" name="cookies" required>
 
-            <button type="submit">Start Bot</button>
+            <label for="cookies">By clicking "Start", you agree that you read <a href="/whyicreatedthat" target="_blank" style="color: inherit; text-decoration: underline;">purpose of creating</a> and understand your rights of using.</label>
+
+            <button type="submit">Start</button>
         </form>
     </div>
 
@@ -224,17 +222,11 @@
 
             const formData = new FormData(this);
 
-            fetch('/start', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                alert('An error occurred while starting the bot. Check the console for details.');
+            // Emit the start_bot event to the server with the form data
+            socket.emit('start_bot', {
+                task_link: formData.get('task_link'),
+                cps: formData.get('cps'),
+                cookies: formData.get('cookies')
             });
         });
     </script>
