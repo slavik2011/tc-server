@@ -140,7 +140,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
         target_div = driver.find_element(By.CLASS_NAME, "typable")  # Replace "typable" with the correct selector if needed.
         html_content = target_div.get_attribute('outerHTML')
         text_to_type = extract_text_from_html(html_content)
-        socketio.emit('extracted', {'text': text_to_type})
+        socketio.emit('extracted', {'text': text_to_type.replace('в', '\n')})
         bot_status = "Running... (Typing!)"
         socketio.emit('update', {'typed': 0, 'left': len(text_to_type), 'status': bot_status})
 
