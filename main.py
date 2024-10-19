@@ -99,6 +99,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
         socketio.emit('extracted', {'text': 'not loaded yet'})
         
         chrome_options = webdriver.ChromeOptions()
+        '''
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-extensions")
         chrome_options.add_argument("--disable-application-cache")
@@ -106,11 +107,12 @@ def start_typing_task(task_url, cookies_file, req_cps):
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--force-device-scale-factor=1")
+        '''
 
         bot_status = "Running... (Running browser | options= --headless)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         
-        driver = webdriver.Chrome(options=chrome_options)
+        driver = webdriver.Remote(desired_capabilities=webdriver.DesiredCapabilities.HTMLUNIT)
 
         bot_status = "Running... (Opening page)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
