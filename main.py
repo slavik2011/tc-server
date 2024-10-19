@@ -54,6 +54,7 @@ class Typer:
     def __init__(self, cps=5):
         self.delay_min = 1 / cps + random.uniform((1 / cps) / 100, 1 / cps)
         self.delay_max = 1 / cps + random.uniform((1 / cps) / 100, 1 / cps)
+        self.cps = cps
         print(f'Delays set to: min={self.delay_min}, max={self.delay_max}')
 
     def type_text(self, text: str, driver):
@@ -84,7 +85,7 @@ class Typer:
             symbols_typed += 1
 
             # Emit an update every 30 characters
-            if symbols_typed % 30 == 0:
+            if symbols_typed % self.cps == 0:
                 socketio.emit('update', {'typed': symbols_typed, 'left': total_symbols - symbols_typed, 'status': bot_status})
 
             # Introduce delay between keystrokes
