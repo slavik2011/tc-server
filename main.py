@@ -136,29 +136,23 @@ def start_typing_task(task_url, cookies_file, req_cps):
         bot_status = "Running... (Extracting text)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         
-        # Locate the target div using the improved XPath search
-        score_div = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, '//div[contains(@style, "font-family: Akrobat-Bold;") and contains(@style, "font-size: 5em;")]'))
-        )
+        # Extract the text from the located div
+        html_content = score_div.get_attribute('outerHTML')
+        text_to_type = extract_text_from_html(html_content)
+        socketio.emit('extracted', {'text': text_to_type})
+        bot_status = "Running... (Typing!)"
+        socketio.emit('update', {'typed': 0, 'left': len(text_to_type), 'status': bot_status})
 
-        if score_div:
-            # Extract the text from the located div
-            html_content = score_div.get_attribute('outerHTML')
-            text_to_type = extract_text_from_html(html_content)
-            socketio.emit('extracted', {'text': text_to_type})
-
-            # Create a download link for the extracted HTML
-            download_link = f"/download/{html_file_path}"
-            socketio.emit('download_link', {'link': download_link})
-
-            bot_status = "Running... (Typing!)"
-            socketio.emit('update', {'typed': 0, 'left': len(text_to_type), 'status': bot_status})
-
-            # Start typing using the Typer class
-            typer = Typer(req_cps)
-            typer.type_text(text_to_type, driver)  # Call type_text with the driver
+        # Start typing using the Typer class
+        typer = Typer(req_cps)
+        typer.type_text(text_to_type, driver)  # Call type_text with the driver
 
         bot_status = "Waiting for results..."
+
+        # Locate the target div using the improved XPath search
+        element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div.typing-results.scrollable-results"))
+        )
     except Exception as e:
         print(f"Error in typing task: {e}")
         bot_status = "Error"
