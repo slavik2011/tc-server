@@ -8,11 +8,8 @@ from selenium.webdriver.common.by import By
 import time
 import random
 from bs4 import BeautifulSoup
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver.chrome.options import Options as ChromeOptions
-from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
 import sys
 
 app = Flask(__name__)
@@ -63,7 +60,7 @@ class Typer:
         total_symbols = len(text)
 
         # Initialize ActionChains to send keys to the whole page
-        actions = ActionChains(driver)
+        actions = webdriver.ActionChains(driver)
 
         # Track the last character to avoid typing two spaces consecutively
         last_char = None
@@ -101,30 +98,19 @@ def start_typing_task(task_url, cookies_file, req_cps):
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         socketio.emit('extracted', {'text': 'not loaded yet'})
 
-        # Set capabilities for Internet Explorer
-        capabilities = DesiredCapabilities.INTERNETEXPLORER.copy()
-        capabilities['ignoreProtectedModeSettings'] = True  # Ignore protected mode settings
-
-        bot_status = "Running... (Running browser)"
-        socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
-
-        # Set up Chrome options
-        chrome_options = ChromeOptions()
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--disk-cache-size=10")
-        chrome_options.add_argument("--disable-extensions")
-        chrome_options.add_argument("--single-process")
-        chrome_options.add_argument("--window-size=320,240")
-        chrome_options.add_argument("--disable-application-cache")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--js-flags=--max_old_space_size=128")
+        # Set up Firefox options
+        firefox_options = FirefoxOptions()
+        firefox_options.add_argument("--headless")
+        firefox_options.add_argument("--disable-gpu")
+        firefox_options.set_preference("browser.cache.disk.enable", False)
+        firefox_options.set_preference("browser.cache.memory.enable", False)
+        firefox_options.set_preference("browser.cache.offline.enable", False)
 
         bot_status = "Running... (Running browser | options= --headless)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         
-        # Initialize the Chrome driver with the specified options
-        driver = webdriver.Chrome(service=ChromeService(), options=chrome_options)
+        # Initialize the Firefox driver with the specified options
+        driver = webdriver.Firefox(service=FirefoxService(), options=firefox_options)
 
         bot_status = "Running... (Opening page)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
@@ -191,7 +177,7 @@ def start_bot():
     cookies_file_path = os.path.join('cookies.json')
     cookies_file.save(cookies_file_path)
 
-    socketio.start_background_task(start_typing_task, task_link, cookies_file_path, req_cps) # Correct way to start
+    socketio.start_background_task(start_typing_task, task_link, cookies_file_path, req_cps)  # Correct way to start
     return jsonify({'message': 'Bot started successfully!'})
 
 @app.route('/status', methods=['GET'])
