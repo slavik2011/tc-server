@@ -3,8 +3,6 @@ ARG PORT=443
 
 # Use the Cypress browsers base image
 FROM cypress/browsers:latest
-FROM apache/airflow:2.1.4
-USER root
 # Install required packages
 RUN apt-get update && apt-get install -y \
     python3 \
@@ -16,12 +14,18 @@ RUN apt-get update && apt-get install -y \
     gnupg2 \
     && apt-get clean
 
-RUN apt-get update                             \
- && apt-get install -y --no-install-recommends \
-    ca-certificates curl firefox-esr           \
- && rm -fr /var/lib/apt/lists/*                \
- && curl -L https://github.com/mozilla/geckodriver/releases/download/v0.30.0/geckodriver-v0.30.0-linux64.tar.gz | tar xz -C /usr/local/bin \
- && apt-get purge -y ca-certificates curl
+RUN apk add --no-cache firefox-esr
+
+# Install Geckodriver
+SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+RUN apk add --no-cache --virtual .build-deps wget \
+    && GECKODRIVER_VERSION=$(wget -qO- https://api.github.com/repos/mozilla/geckodriver/releases/latest \
+    | grep "tag_name" | sed -E 's/.*"([^"]+)".*/\1/') \
+    && wget -qO /tmp/geckodriver.tar.gz \
+    "https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz" \
+    && tar -xzf /tmp/geckodriver.tar.gz -C /usr/local/bin/ \
+    && rm /tmp/geckodriver.tar.gz \
+    && apk del .build-deps
 
 # Copy requirements file
 COPY req.txt .
