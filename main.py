@@ -252,11 +252,11 @@ async def start_rs_bot():
         except json.JSONDecodeError as e:
             return jsonify({'message': 'Invalid cookie file format', 'error': str(e)}), 400
 
-    # Start sending requests
-    socketio.start_background_task(send_requests, duration, cookies)
+    # Start a new thread for sending requests
+    threading.Thread(target=send_requests, args=(duration, cookies,), daemon=True).start()
 
-    # Emit that the bot has started
-    await socketio.emit('update', {'message': 'Bot started', 'duration': duration})
+    # Emit that the bot has started (no await needed)
+    socketio.emit('update', {'message': 'Bot started', 'duration': duration})
     
     return jsonify({'message': 'Bot started', 'duration': duration})
 
