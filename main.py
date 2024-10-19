@@ -202,12 +202,13 @@ async def start_bot():
     
 def send_requests(duration, cookies, url):
     url2 = 'https://tracking.rosettastone.com/ee/ce/lausd8264/users/4258406/path_step_scores?course=SK-ENG-L5-NA-PE-NA-NA-Y-3&unit_index=0&lesson_index=3&path_type=general&occurrence=1&method=get'
-    url3 = 'https://tracking.rosettastone.com/ee/ce/lausd8264/users/4258406/lag_alarms'
+    url3 = 'https://tracking.rosettastone.com/ee/ce/lausd8264/users/4258406/path_step_scores?course=SK-ENG-L5-NA-PE-NA-NA-Y-3&unit_index=0&lesson_index=3&path_type=general&occurrence=1&path_step_media_id=PATHSTEP_160529222&_method=put'
+    url4 = 'https://tracking.rosettastone.com/ee/ce/lausd8264/users/4258406/lag_alarms'
     time_left = duration
     successful_requests = 0  # Counter for successful requests
     unsuccessful_requests = 0  # Counter for unsuccessful requests
 
-    while time_left > 0:
+    while time_left >= 0:
         # Send OPTIONS request with cookies
         try:
             options_response = requests.options(url, cookies=cookies)
@@ -220,7 +221,7 @@ def send_requests(duration, cookies, url):
             else:
                 unsuccessful_requests += 1
 
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             print(f'Error sending OPTIONS request: {e}')
             socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})
             unsuccessful_requests += 1  # Increment unsuccessful counter
@@ -244,12 +245,21 @@ def send_requests(duration, cookies, url):
             else:
                 unsuccessful_requests += 1
 
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             print(f'Error sending OPTIONS request: {e}')
             socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})
             unsuccessful_requests += 1  # Increment unsuccessful counter
 
         try:
+            params = {
+                'course': 'SK-ENG-L5-NA-PE-NA-NA-Y-3',
+                'unit_index': '0',
+                'lesson_index': '3',
+                'path_type': 'general',
+                'occurrence': '1',
+                'path_step_media_id': 'PATHSTEP_160529222',
+                'method': 'get'
+            }
             options_response = requests.options(url3, cookies=cookies, params=params)
             print('OPTIONS Response Status Code:', options_response.status_code)
             socketio.emit('update', {'message': 'OPTIONS request sent (#3)', 'status_code': options_response.status_code})
@@ -260,29 +270,26 @@ def send_requests(duration, cookies, url):
             else:
                 unsuccessful_requests += 1
 
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             print(f'Error sending OPTIONS request: {e}')
             socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})
             unsuccessful_requests += 1  # Increment unsuccessful counter
 
-        # Send POST request with cookies
-        '''post_data = {'data': 'exampleData'}  # Customize this as needed
         try:
-            post_response = requests.post(url, json=post_data, cookies=cookies)
-            print('POST Response Status Code:', post_response.status_code)
-            print('POST Response Data:', post_response.json())  # Assuming the response is JSON
-            socketio.emit('update', {'message': 'POST request sent', 'status_code': post_response.status_code, 'data': post_response.json()})
+            options_response = requests.options(url4, cookies=cookies)
+            print('OPTIONS Response Status Code:', options_response.status_code)
+            socketio.emit('update', {'message': 'OPTIONS request sent (#4)', 'status_code': options_response.status_code})
 
             # Check response status and update the counter
-            if post_response.status_code == 200:
+            if options_response.status_code == 200:
                 successful_requests += 1
             else:
                 unsuccessful_requests += 1
 
-        except requests.exceptions.RequestException as e:
-            print(f'Error sending POST request: {e}')
-            socketio.emit('error', {'message': f'Error sending POST request: {e}'})
-            unsuccessful_requests += 1  # Increment unsuccessful counter'''
+        except Exception as e:
+            print(f'Error sending OPTIONS request: {e}')
+            socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})
+            unsuccessful_requests += 1  # Increment unsuccessful counter
 
         # Emit the counts of successful and unsuccessful requests
         socketio.emit('update', {
