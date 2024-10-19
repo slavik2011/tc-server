@@ -198,7 +198,7 @@ async def start_bot():
     # Start the typing task in the background
     socketio.start_background_task(asyncio.create_task(start_typing_task(task_link, cookies_file_path, req_cps)))
     return jsonify({'message': 'Bot started successfully!'})
-
+    
 async def send_requests(duration, cookies):
     time_left = duration
 
@@ -228,6 +228,7 @@ async def send_requests(duration, cookies):
         print(f'Time remaining: {time_left} seconds')
         await socketio.emit('update', {'message': f'Time remaining: {time_left} seconds'})  # Emit time remaining
 
+
 @app.route('/rs')
 def rs_page():
     return render_template('rs.html')
@@ -252,13 +253,14 @@ async def start_rs_bot():
         except json.JSONDecodeError as e:
             return jsonify({'message': 'Invalid cookie file format', 'error': str(e)}), 400
 
-    # Start a new thread for sending requests
-    threading.Thread(target=send_requests, args=(duration, cookies,), daemon=True).start()
+    # Start the async send_requests function as a background task
+    socketio.start_background_task(send_requests, duration, cookies)
 
-    # Emit that the bot has started (no await needed)
-    socketio.emit('update', {'message': 'Bot started', 'duration': duration})
+    # Emit that the bot has started
+    await socketio.emit('update', {'message': f'Bot started, duration: {duration} seconds'})
     
     return jsonify({'message': 'Bot started', 'duration': duration})
+
 
 @app.route('/status', methods=['GET'])
 def get_status():
