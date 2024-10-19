@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Paragraph Page</title>
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(90deg, rgba(12,69,8,1) 0%, rgba(20,147,31,1) 50%, rgba(8,69,9,1) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow: hidden;
+            background-size: 200% 200%;
+            animation: gradientBackground 10s ease infinite;
+        }
+
+        /* Background animation */
+        @keyframes gradientBackground {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 800px;
+            transition: transform 0.5s ease, box-shadow 0.5s ease;
+        }
+
+        /* Hover effect on container */
+        .container:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            position: relative;
+            opacity: 0;
+            animation: fadeIn 1.5s ease forwards;
+        }
+
+        p {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #555;
+            opacity: 0;
+            animation: fadeIn 2s ease forwards;
+            animation-delay: 0.5s;
+        }
+
+        /* Animation for fading in text */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Highlight hover for paragraphs */
+        p:hover {
+            background-color: #f5f5f5;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Floating action button */
+        .floating-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: #ff6b81;
+            color: white;
+            border-radius: 50%;
+            padding: 15px 20px;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Why I created this?</h1>
+        <p>
+            When reading the Terms of Usage of school Chromebooks, I found many security holes that allowed me to create something like this and run it during periods on a school Chromebook.
+        </p>
+        <p>
+            This site was created by me to show these holes and help to remove them. I like typing, and my purpose was never to create and really use it to type.
+        </p>
+        <p>
+            If someone from LAUSD sees this site, please don't move it into the blacklist; that would be useless. I can find another hosting and deploy it again.
+        </p>
+        <p>
+            The source code of this site is currently in a private GitHub repository and ready to share. If LAUSD wants to see my source code, I'll share it on this page.
+        </p>
+        <p>
+            If any teacher sees this, I'll ask my math teacher Mr. Castaneda to give computer science periods. If not Mr. Castaneda, please take it slowly and let me know. I'll add security to this site to avoid usage for some students.
+        </p>
+        <p>
+            And please, DON'T USE IT SERIOUSLY; it's just a demonstrational project.
+        </p>
+        <p>
+            If someone sees this, it means that these security holes are becoming more popular and will also be detected by LAUSD.
+        </p>
+        <p>
+            Happy learning, slvreal.
+        </p>
+    </div>
+
+    <!-- Floating button -->
+    <div class="floating-btn">+</div>
+
+    <script>
+        // Floating button click functionality
+        document.querySelector('.floating-btn').addEventListener('click', () => {
+            alert("You clicked the floating button!");
+        });
+    </script>
+</body>
+</html>
