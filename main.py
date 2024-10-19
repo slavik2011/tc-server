@@ -105,7 +105,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
         chrome_options.add_argument("--disk-cache-size=1")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--force-device-scale-factor=0.5")
+        chrome_options.add_argument("--force-device-scale-factor=1.5")
 
         bot_status = "Running... (Running browser | options= --headless)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
