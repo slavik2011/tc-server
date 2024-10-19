@@ -1,8 +1,23 @@
-ARG PORT=443
-FROM cypress/browsers:latest
-RUN echo $(python3 -m site --user_base)
-COPY req.txt .
+# Use an official Python image as a base
+FROM python:3.10-slim
+
+# Set environment variables
 ENV PATH /home/root/.local/bin:${PATH}
-RUN apt-get update && apt-get install -y python3-pip && pip install -r req.txt
+
+# Copy requirements file
+COPY req.txt .
+
+# Update system and install dependencies
+RUN apt-get update && \
+    apt-get install -y python3-pip && \
+    apt-get install -y --no-install-recommends gcc && \
+    pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r req.txt && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy the rest of the application code
 COPY . .
-CMD uvicorn main:app --host 0.0.0.0 --port $PORT
+
+# Set the command to run the application
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "$PORT"]
