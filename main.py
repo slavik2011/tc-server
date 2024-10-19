@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 from selenium.webdriver.chrome.options import ChromiumOptions
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
+import sys
 
 
 app = Flask(__name__)
@@ -175,4 +176,4 @@ def get_status():
     return jsonify({'status': bot_status})
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, allow_unsafe_werkzeug=True, port=40001)
+    socketio.run(app, debug=True, allow_unsafe_werkzeug=True, port=int(sys.argv[1]))
