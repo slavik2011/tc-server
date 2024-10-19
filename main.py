@@ -14,7 +14,7 @@ import sys
 import requests
 
 app = Flask(__name__)
-socketio = SocketIO(app, async_mode='eventlet')  # Change async_mode to 'eventlet' for asyncio support
+socketio = SocketIO(app, async_mode='threading')  # Change async_mode to 'eventlet' for asyncio support
 
 bot_status = "Idle"
 total_symbols = 0
