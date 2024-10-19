@@ -3,7 +3,7 @@ ARG PORT=443
 
 # Use the Cypress browsers base image
 FROM cypress/browsers:latest
-FROM linuxserver/firefox:latest
+FROM apache/airflow:2.1.4
 
 # Install required packages
 RUN apt-get update && apt-get install -y \
@@ -16,13 +16,14 @@ RUN apt-get update && apt-get install -y \
     gnupg2 \
     && apt-get clean
 
-# Install GeckoDriver
-RUN GECKODRIVER_VERSION=`wget -qO- https://api.github.com/repos/mozilla/geckodriver/releases/latest | grep -Po '"tag_name": "\K[^"]*'` && \
-    wget https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz && \
-    tar -xvzf geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz && \
-    mv geckodriver /usr/local/bin/ && \
-    chmod +x /usr/local/bin/geckodriver && \
-    rm geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz
+USER root
+RUN apt-get update                             \
+ && apt-get install -y --no-install-recommends \
+    ca-certificates curl firefox-esr           \
+ && rm -fr /var/lib/apt/lists/*                \
+ && curl -L https://github.com/mozilla/geckodriver/releases/download/v0.30.0/geckodriver-v0.30.0-linux64.tar.gz | tar xz -C /usr/local/bin \
+ && apt-get purge -y ca-certificates curl
+USER airflow
 
 # Copy requirements file
 COPY req.txt .
