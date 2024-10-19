@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.chrome.service import Service as ChromeService
 import sys
 
@@ -112,7 +112,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
         chrome_options = ChromeOptions()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--disk-cache-size=1")
+        chrome_options.add_argument("--disk-cache-size=10")
         chrome_options.add_argument("--disable-extensions")
         chrome_options.add_argument("--single-process")
         chrome_options.add_argument("--window-size=320,240")
