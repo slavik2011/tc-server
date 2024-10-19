@@ -3,6 +3,8 @@ ARG PORT=443
 
 # Use the Cypress browsers base image
 FROM cypress/browsers:latest
+FROM e8kor/python-geckodriver-docker-image:latest
+
 # Install required packages
 RUN apt-get update && apt-get install -y \
     python3 \
