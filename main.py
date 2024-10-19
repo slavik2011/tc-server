@@ -164,6 +164,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
         print(f"Error in typing task: {e}")
         bot_status = "Error"
         socketio.emit('error', {'message': str(e), 'status': bot_status})
+        bot_status = "Idle"
     finally:
         if driver:
             socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': 'Waiting for results...'})
