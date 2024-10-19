@@ -154,7 +154,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
     finally:
         if driver:
             socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': 'Waiting for results...'})
-            time.sleep(15)
+            time.sleep(5)
             # Save the HTML content to a file
             with open(html_file_path, 'w', encoding='utf-8') as f:
                 f.write(driver.page_source)
