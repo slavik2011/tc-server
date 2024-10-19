@@ -136,7 +136,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
         socketio.emit('extracted', {'text': text_to_type})
 
         bot_status = "Running... (Typing!)"
-        socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
+        socketio.emit('update', {'typed': 0, 'left': len(text_to_type), 'status': bot_status})
 
         #driver.get('https://www.rapidtables.com/tools/notepad.html')
 
@@ -149,7 +149,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
     finally:
         if driver:
             socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': 'Waiting for results...'})
-            time.sleep(3)
+            time.sleep(7)
             driver.quit()
             bot_status = "Finished"
             socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': bot_status})
