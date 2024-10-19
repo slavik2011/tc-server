@@ -10,6 +10,7 @@ import random
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.htmlunit import HtmlUnitDriver
 import sys
 
 app = Flask(__name__)
@@ -112,7 +113,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
         bot_status = "Running... (Running browser | options= --headless)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         
-        driver = webdriver.Remote(desired_capabilities=webdriver.DesiredCapabilities.HTMLUNIT)
+        driver = HtmlUnitDriver() #webdriver.Remote(desired_capabilities=webdriver.DesiredCapabilities.HTMLUNIT)
 
         bot_status = "Running... (Opening page)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
