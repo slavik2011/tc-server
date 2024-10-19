@@ -5,25 +5,16 @@ import json
 import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import time
 import random
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options as ChromeOptions
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 import sys
-import requests, threading
+import requests
 
 app = Flask(__name__)
-
-# URL to send requests to (change as needed)
-url = 'https://lcp.rosettastone.com/api/v3/session/heartbeat'
-
-app = Flask(__name__)
-socketio = SocketIO(app, async_mode='threading')
+socketio = SocketIO(app, async_mode='eventlet')  # Change async_mode to 'eventlet' for asyncio support
 
 bot_status = "Idle"
 total_symbols = 0
@@ -65,7 +56,7 @@ class Typer:
         self.cps = cps
         print(f'Delays set to: min={self.delay_min}, max={self.delay_max}')
 
-    def type_text(self, text: str, driver):
+    async def type_text(self, text: str, driver):
         global bot_status, total_symbols
         symbols_typed = 0
         total_symbols = len(text)
@@ -94,20 +85,20 @@ class Typer:
 
             # Emit an update every 30 characters
             if symbols_typed % (self.cps // 2) == 0:
-                socketio.emit('update', {'typed': symbols_typed, 'left': total_symbols - symbols_typed, 'status': bot_status})
+                await socketio.emit('update', {'typed': symbols_typed, 'left': total_symbols - symbols_typed, 'status': bot_status})
 
             # Introduce delay between keystrokes
-            time.sleep(random.uniform(self.delay_min, self.delay_max))
+            await asyncio.sleep(random.uniform(self.delay_min, self.delay_max))
 
-def start_typing_task(task_url, cookies_file, req_cps):
+async def start_typing_task(task_url, cookies_file, req_cps):
     global bot_status
     driver = None
     html_file_path = f"output_{random.randint(1, 10000)}.html"  # Path to save the HTML file
 
     try:
         bot_status = "Running... (Setting options)"
-        socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
-        socketio.emit('extracted', {'text': 'not loaded yet'})
+        await socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
+        await socketio.emit('extracted', {'text': 'not loaded yet'})
         
         chrome_options = ChromeOptions()
         chrome_options.add_argument("--headless")
@@ -121,12 +112,12 @@ def start_typing_task(task_url, cookies_file, req_cps):
         chrome_options.add_argument("--js-flags=--max_old_space_size=512")
 
         bot_status = "Running... (Running browser | options= --headless)"
-        socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
+        await socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         
         driver = webdriver.Chrome(options=chrome_options)
 
         bot_status = "Running... (Opening page)"
-        socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
+        await socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         driver.get(task_url)
 
         # Load cookies if provided
@@ -138,35 +129,31 @@ def start_typing_task(task_url, cookies_file, req_cps):
                         driver.add_cookie(cookie)
         driver.get(task_url)
 
-        time.sleep(2)
+        await asyncio.sleep(2)
         bot_status = "Running... (Extracting text)"
-        socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
+        await socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         
         # Extract the text from the located div
         target_div = driver.find_element(By.CLASS_NAME, "typable")  # Replace "typable" with the correct selector if needed.
         html_content = target_div.get_attribute('outerHTML')
         text_to_type = extract_text_from_html(html_content)
-        socketio.emit('extracted', {'text': text_to_type.replace('в', '\n')})
+        await socketio.emit('extracted', {'text': text_to_type.replace('в', '\n')})
         bot_status = "Running... (Typing!)"
-        socketio.emit('update', {'typed': 0, 'left': len(text_to_type), 'status': bot_status})
+        await socketio.emit('update', {'typed': 0, 'left': len(text_to_type), 'status': bot_status})
 
         # Start typing using the Typer class
         typer = Typer(req_cps)
-        typer.type_text(text_to_type, driver)  # Call type_text with the driver
+        await typer.type_text(text_to_type, driver)  # Call type_text with the driver
 
-        # Locate the target div using the improved XPath search
-        #element = WebDriverWait(driver, 10).until(
-        #    EC.presence_of_element_located((By.CLASS_NAME, "st0 st7 st24"))
-        #)
     except Exception as e:
         print(f"Error in typing task: {e}")
         bot_status = "Error"
-        socketio.emit('error', {'message': str(e), 'status': bot_status})
+        await socketio.emit('error', {'message': str(e), 'status': bot_status})
     finally:
         if driver:
             for i in range(10):
                 bot_status = f"Waiting for results ({10-i} seconds)..."
-                time.sleep(1)
+                await asyncio.sleep(1)
             # Save the HTML content to a file
             with open(html_file_path, 'w', encoding='utf-8') as f:
                 try:
@@ -176,10 +163,10 @@ def start_typing_task(task_url, cookies_file, req_cps):
             driver.quit()
 
             # Emit the download link and final status update
-            socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': 'Finished'})
+            await socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': 'Finished'})
             bot_status = "Idle"
         else:
-            socketio.emit('error', {'message': 'NO DRIVER!', 'status': 'Error'})
+            await socketio.emit('error', {'message': 'NO DRIVER!', 'status': 'Error'})
 
 @app.route('/')
 def index():
@@ -190,12 +177,12 @@ def whypage():
     return render_template('why.html')
 
 @app.route('/start', methods=['POST'])
-def start_bot():
+async def start_bot():
     global bot_status
 
     # Check if the bot is already running
     if bot_status != "Idle":
-        socketio.emit('error', {'message': 'A typing task is already running. Please wait until it finishes. Maybe someone else is typing now?'})
+        await socketio.emit('error', {'message': 'A typing task is already running. Please wait until it finishes. Maybe someone else is typing now?'})
         return jsonify({'message': 'A typing task is already running. Please wait until it finishes. Maybe someone else is typing now?'}), 400
 
     if 'cookies' not in request.files or 'task_link' not in request.form:
@@ -209,10 +196,10 @@ def start_bot():
     cookies_file.save(cookies_file_path)
 
     # Start the typing task in the background
-    socketio.start_background_task(start_typing_task, task_link, cookies_file_path, req_cps)
+    socketio.start_background_task(asyncio.create_task(start_typing_task(task_link, cookies_file_path, req_cps)))
     return jsonify({'message': 'Bot started successfully!'})
 
-def send_requests(duration, cookies):
+async def send_requests(duration, cookies):
     time_left = duration
 
     while time_left > 0:
@@ -220,10 +207,10 @@ def send_requests(duration, cookies):
         try:
             options_response = requests.options(url, cookies=cookies)
             print('OPTIONS Response Status Code:', options_response.status_code)
-            socketio.emit('update', {'message': 'OPTIONS request sent', 'status_code': options_response.status_code})  # Emit status
+            await socketio.emit('update', {'message': 'OPTIONS request sent', 'status_code': options_response.status_code})  # Emit status
         except requests.exceptions.RequestException as e:
             print(f'Error sending OPTIONS request: {e}')
-            socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})  # Emit error
+            await socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})  # Emit error
 
         # Send POST request with cookies
         post_data = {'data': 'exampleData'}  # Customize this as needed
@@ -231,22 +218,22 @@ def send_requests(duration, cookies):
             post_response = requests.post(url, json=post_data, cookies=cookies)
             print('POST Response Status Code:', post_response.status_code)
             print('POST Response Data:', post_response.json())  # Assuming the response is JSON
-            socketio.emit('update', {'message': 'POST request sent', 'status_code': post_response.status_code, 'data': post_response.json()})  # Emit status
+            await socketio.emit('update', {'message': 'POST request sent', 'status_code': post_response.status_code, 'data': post_response.json()})  # Emit status
         except requests.exceptions.RequestException as e:
             print(f'Error sending POST request: {e}')
-            socketio.emit('error', {'message': f'Error sending POST request: {e}'})  # Emit error
+            await socketio.emit('error', {'message': f'Error sending POST request: {e}'})  # Emit error
 
-        time.sleep(5)  # Wait for 5 seconds before the next request
+        await asyncio.sleep(5)  # Wait for 5 seconds before the next request
         time_left -= 5
         print(f'Time remaining: {time_left} seconds')
-        socketio.emit('update', {'message': f'Time remaining: {time_left} seconds'})  # Emit time remaining
+        await socketio.emit('update', {'message': f'Time remaining: {time_left} seconds'})  # Emit time remaining
 
 @app.route('/rs')
 def rs_page():
     return render_template('rs.html')
 
 @app.route('/startrs', methods=['POST'])
-def start_rs_bot():
+async def start_rs_bot():
     duration = int(request.form.get('duration', 0))  # Get duration from form
     cookie_file = request.files['cookies']  # Get the uploaded cookie file
 
@@ -265,14 +252,13 @@ def start_rs_bot():
         except json.JSONDecodeError as e:
             return jsonify({'message': 'Invalid cookie file format', 'error': str(e)}), 400
 
-    # Start a new thread for sending requests
-    threading.Thread(target=send_requests, args=(duration, cookies), daemon=True).start()
+    # Start sending requests
+    socketio.start_background_task(send_requests, duration, cookies)
 
     # Emit that the bot has started
-    socketio.emit('update', {'message': 'Bot started', 'duration': duration})
+    await socketio.emit('update', {'message': 'Bot started', 'duration': duration})
     
     return jsonify({'message': 'Bot started', 'duration': duration})
-
 
 @app.route('/status', methods=['GET'])
 def get_status():
