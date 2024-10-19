@@ -202,6 +202,8 @@ async def start_bot():
     
 def send_requests(duration, cookies, url):
     time_left = duration
+    successful_requests = 0  # Counter for successful requests
+    unsuccessful_requests = 0  # Counter for unsuccessful requests
 
     while time_left > 0:
         # Send OPTIONS request with cookies
@@ -209,9 +211,17 @@ def send_requests(duration, cookies, url):
             options_response = requests.options(url, cookies=cookies)
             print('OPTIONS Response Status Code:', options_response.status_code)
             socketio.emit('update', {'message': 'OPTIONS request sent', 'status_code': options_response.status_code})
+
+            # Check response status and update the counter
+            if options_response.status_code == 200:
+                successful_requests += 1
+            else:
+                unsuccessful_requests += 1
+
         except requests.exceptions.RequestException as e:
             print(f'Error sending OPTIONS request: {e}')
             socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})
+            unsuccessful_requests += 1  # Increment unsuccessful counter
 
         # Send POST request with cookies
         post_data = {'data': 'exampleData'}  # Customize this as needed
@@ -220,14 +230,28 @@ def send_requests(duration, cookies, url):
             print('POST Response Status Code:', post_response.status_code)
             print('POST Response Data:', post_response.json())  # Assuming the response is JSON
             socketio.emit('update', {'message': 'POST request sent', 'status_code': post_response.status_code, 'data': post_response.json()})
+
+            # Check response status and update the counter
+            if post_response.status_code == 200:
+                successful_requests += 1
+            else:
+                unsuccessful_requests += 1
+
         except requests.exceptions.RequestException as e:
             print(f'Error sending POST request: {e}')
             socketio.emit('error', {'message': f'Error sending POST request: {e}'})
+            unsuccessful_requests += 1  # Increment unsuccessful counter
+
+        # Emit the counts of successful and unsuccessful requests
+        socketio.emit('update', {
+            'message': f'Time remaining: {time_left} seconds',
+            'successful_requests': successful_requests,
+            'unsuccessful_requests': unsuccessful_requests
+        })
 
         time.sleep(5)  # Wait for 5 seconds before the next request
         time_left -= 5
         print(f'Time remaining: {time_left} seconds')
-        socketio.emit('update', {'message': f'Time remaining: {time_left} seconds'})
 
 @app.route('/rs')
 def rs_page():
