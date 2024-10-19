@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Bot (created by slvreal)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.js"></script>
+</head>
+<body>
+    <h1>Typing Bot</h1>
+    <p>Typed: <span id="typed">0</span></p>
+    <p>Left: <span id="left">0</span></p>
+    <p>Status: <span id="status">Idle</span></p>
+    <p>Extracted text (в means enter): <span id="extrtext">start to see</span></p>
+
+    <form id="startBotForm" enctype="multipart/form-data">
+        <label for="task_link">Task Link:</label>
+        <input type="text" id="task_link" name="task_link" required><br>
+
+        <label for="task_link">CPS (clicks per second) (values more than 15 can cause ban):</label>
+        <input type="number" id="cps" name="cps" required><br>
+
+        <label for="cookies">Upload Cookies:</label>
+        <input type="file" id="cookies" name="cookies" required><br>
+
+        <button type="submit">Start Bot</button>
+    </form>
+
+    <script>
+        var socket = io();
+
+        socket.on('connect', () => {
+            console.log('Connected to the server!');
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from the server.');
+        });
+
+        socket.on('update', function(data) {
+            document.getElementById('typed').innerText = data.typed;
+            document.getElementById('left').innerText = data.left;
+            document.getElementById('status').innerText = data.status;
+        });
+
+        socket.on('extracted', function(data) {
+            document.getElementById('extrtext').innerText = data.text;
+        });
+
+        socket.on('error', (data) => {
+            console.error('Error:', data.message);
+            document.getElementById('status').innerText = data.status;
+            alert('An error occurred: ' + data.message);
+        });
+
+        document.getElementById('startBotForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+
+            fetch('/start', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('An error occurred while starting the bot. Check the console for details.');
+            });
+        });
+    </script>
+</body>
+</html>
