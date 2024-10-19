@@ -1,5 +1,5 @@
 ARG PORT=443
-FROM cypress/browser:latest
+FROM cypress/browsers:latest
 RUN echo $(python3 -m site --user_base)
 COPY req.txt .
 ENV PATH /home/root/.local/bin:${PATH}
