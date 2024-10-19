@@ -21,6 +21,10 @@
             background-size: 200% 200%;
         }
 
+        .mgr {
+            margin-bottom: 40px; /* Adds space below each paragraph */
+        }
+
         @keyframes gradientBackground {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -167,6 +171,8 @@
             <p>Status: <span id="status">Idle</span></p>
             <p>Extracted text (в means enter): <span id="extrtext">start to see</span></p>
         </div>
+
+        <div class="mgr"></div>
 
         <form id="startBotForm" enctype="multipart/form-data">
             <label for="task_link">Task Link:</label>
