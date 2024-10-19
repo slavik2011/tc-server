@@ -98,27 +98,22 @@ def start_typing_task(task_url, cookies_file, req_cps):
         bot_status = "Running... (Setting options)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         socketio.emit('extracted', {'text': 'not loaded yet'})
-        
-        chrome_options = webdriver.ChromeOptions()
-        '''
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--disable-extensions")
-        chrome_options.add_argument("--disable-application-cache")
-        chrome_options.add_argument("--disk-cache-size=1")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--force-device-scale-factor=1")
-        '''
 
-        bot_status = "Running... (Running browser | options= --headless)"
+        # Set capabilities for Internet Explorer
+        capabilities = DesiredCapabilities.INTERNETEXPLORER.copy()
+        capabilities['ignoreProtectedModeSettings'] = True  # Ignore protected mode settings
+
+        bot_status = "Running... (Running browser)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
-        
-        driver = HtmlUnitDriver() #webdriver.Remote(desired_capabilities=webdriver.DesiredCapabilities.HTMLUNIT)
+
+        # Initialize the IE driver
+        driver = webdriver.Ie(executable_path='path_to_your_IEDriverServer.exe', desired_capabilities=capabilities)
 
         bot_status = "Running... (Opening page)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         driver.get(task_url)
 
+        # Load cookies if they exist
         if os.path.exists(cookies_file):
             with open(cookies_file, 'r') as f:
                 cookies = json.load(f)
@@ -130,7 +125,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
         time.sleep(2)
         bot_status = "Running... (Extracting text)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
-        
+
         target_div = driver.find_element(By.CLASS_NAME, "typable")  # Replace "typable" with the correct selector if needed.
         html_content = target_div.get_attribute('outerHTML')
         text_to_type = extract_text_from_html(html_content)
@@ -145,7 +140,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
 
         typer = Typer(req_cps)
         typer.type_text(text_to_type, driver)  # Call type_text with the driver
-        
+
     except Exception as e:
         print(f"Error in typing task: {e}")
         bot_status = "Error"
