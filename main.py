@@ -1,5 +1,5 @@
 import asyncio
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit
 import json
 import os
@@ -8,20 +8,15 @@ from selenium.webdriver.common.by import By
 import time
 import random
 from bs4 import BeautifulSoup
-from selenium.webdriver.chrome.options import ChromiumOptions
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 import sys
-
 
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode='threading')
 
 bot_status = "Idle"
 total_symbols = 0
-
-from bs4 import BeautifulSoup
-
 
 def extract_text_from_html(html_content):
     # Replace non-breaking spaces in the raw HTML first
@@ -71,8 +66,6 @@ class Typer:
         last_char = None
 
         for char in text:
-            #print(f'Typing character: "{char}"')  # Debugging
-
             # Only type a space if it's not following another space
             if char == " " and last_char == " ":
                 continue  # Skip duplicate spaces
@@ -98,10 +91,13 @@ class Typer:
 def start_typing_task(task_url, cookies_file, req_cps):
     global bot_status
     driver = None
+    html_file_path = f"output_{random.randint(1, 10000)}.html"  # Path to save the HTML file
+
     try:
         bot_status = "Running... (Setting options)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         socketio.emit('extracted', {'text': 'not loaded yet'})
+        
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-extensions")
@@ -110,10 +106,11 @@ def start_typing_task(task_url, cookies_file, req_cps):
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--force-device-scale-factor=0.5")
-        #chrome_options.add_argument("--window-size=640,480")  # Set window size for headless mode
+
         bot_status = "Running... (Running browser | options= --headless)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
-        driver = webdriver.Chrome(options=chrome_options)  # Or specify the path: webdriver.Chrome('/path/to/chromedriver')
+        
+        driver = webdriver.Chrome(options=chrome_options)
 
         bot_status = "Running... (Opening page)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
@@ -130,18 +127,22 @@ def start_typing_task(task_url, cookies_file, req_cps):
         time.sleep(2)
         bot_status = "Running... (Extracting text)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
+        
         target_div = driver.find_element(By.CLASS_NAME, "typable")  # Replace "typable" with the correct selector if needed.
         html_content = target_div.get_attribute('outerHTML')
         text_to_type = extract_text_from_html(html_content)
         socketio.emit('extracted', {'text': text_to_type})
 
+        # Create a download link
+        download_link = f"/download/{html_file_path}"
+        socketio.emit('download_link', {'link': download_link})
+
         bot_status = "Running... (Typing!)"
         socketio.emit('update', {'typed': 0, 'left': len(text_to_type), 'status': bot_status})
 
-        #driver.get('https://www.rapidtables.com/tools/notepad.html')
-
         typer = Typer(req_cps)
         typer.type_text(text_to_type, driver)  # Call type_text with the driver
+        
     except Exception as e:
         print(f"Error in typing task: {e}")
         bot_status = "Error"
@@ -150,9 +151,11 @@ def start_typing_task(task_url, cookies_file, req_cps):
         if driver:
             socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': 'Waiting for results...'})
             time.sleep(7)
-            print(driver.page_source)
+            # Save the HTML content to a file
+            with open(html_file_path, 'w', encoding='utf-8') as f:
+                f.write(html_content)
             driver.quit()
-            bot_status = "Finished"
+            bot_status = f"Finished ({download_link})"
             socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': bot_status})
 
 @app.route('/')
@@ -180,6 +183,10 @@ def start_bot():
 def get_status():
     global bot_status
     return jsonify({'status': bot_status})
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    return send_from_directory(directory='.', path=filename, as_attachment=True)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=int(sys.argv[1]), host='0.0.0.0')
