@@ -152,7 +152,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
 
         # Locate the target div using the improved XPath search
         element = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div.typing-results.scrollable-results"))
+            EC.presence_of_element_located((By.CLASS_NAME, "canvas"))
         )
     except Exception as e:
         print(f"Error in typing task: {e}")
