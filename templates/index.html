@@ -8,15 +8,15 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(90deg, rgba(12,69,8,1) 0%, rgba(20,147,31,1) 50%, rgba(8,69,9,1) 100%);
+            background: linear-gradient(90deg, rgba(85,243,255,1) 0%, rgba(231,220,255,1) 50%, rgba(0,255,128,1) 100%);
             color: #fff;
             margin: 0;
             padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-y: scroll; /* Enable vertical scrolling */
             animation: gradientBackground 10s ease infinite;
             background-size: 200% 200%;
         }
@@ -68,14 +68,11 @@
         p {
             font-size: 1.2rem;
             text-align: center;
+            margin-bottom: 20px; /* Spacing between paragraphs */
         }
 
         #status {
             font-weight: bold;
-        }
-
-        .mgr {
-            margin-bottom: 40px; /* Adds space below each paragraph */
         }
 
         .info-box {
@@ -87,11 +84,6 @@
             text-align: center;
             max-width: 500px;
             margin: 0 auto;
-        }
-
-        .info-box p {
-            margin: 10px 0;
-            font-size: 1.1rem;
         }
 
         @keyframes popUp {
@@ -161,9 +153,9 @@
     <!-- Floating banner at the top -->
     <div class="floating-banner">
         <div class="banner-text">
-			This typing bot was created by slvreal. Read 
-			<a href="/whyicreatedthat" target="_blank" style="color: inherit; text-decoration: underline;">purpose of creating</a>
-		</div>
+            This typing bot was created by slvreal. Read 
+            <a href="file:///C:/Users/user/PycharmProjects/aitest/tc-server/templates/why.html" target="_blank" style="color: inherit; text-decoration: underline;">purpose of creating</a>
+        </div>
     </div>
 
     <div class="container">
@@ -175,8 +167,6 @@
             <p>Status: <span id="status">Idle</span></p>
             <p>Extracted text (в means enter): <span id="extrtext">start to see</span></p>
         </div>
-
-        <div class="mgr"></div>
 
         <form id="startBotForm" enctype="multipart/form-data">
             <label for="task_link">Task Link:</label>
