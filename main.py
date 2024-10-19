@@ -105,7 +105,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
         chrome_options.add_argument("--disk-cache-size=1")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--force-device-scale-factor=1.5")
+        chrome_options.add_argument("--force-device-scale-factor=1")
 
         bot_status = "Running... (Running browser | options= --headless)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
@@ -150,7 +150,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
     finally:
         if driver:
             socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': 'Waiting for results...'})
-            time.sleep(15)
+            time.sleep(7)
             # Save the HTML content to a file
             with open(html_file_path, 'w', encoding='utf-8') as f:
                 f.write(driver.page_source)
