@@ -17,8 +17,8 @@ import sys
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode='threading')
 
-bot_status = "Idle"
-total_symbols = 0
+# Store bot status per client
+client_status = {}
 
 def extract_text_from_html(html_content):
     # Replace non-breaking spaces in the raw HTML first
@@ -56,8 +56,8 @@ class Typer:
         self.delay_max = 1 / cps + random.uniform((1 / cps) / 100, 1 / cps)
         print(f'Delays set to: min={self.delay_min}, max={self.delay_max}')
 
-    def type_text(self, text: str, driver):
-        global bot_status, total_symbols
+    def type_text(self, text: str, driver, client_id):
+        global total_symbols
         symbols_typed = 0
         total_symbols = len(text)
 
@@ -85,21 +85,21 @@ class Typer:
 
             # Emit an update every 30 characters
             if symbols_typed % 30 == 0:
-                socketio.emit('update', {'typed': symbols_typed, 'left': total_symbols - symbols_typed, 'status': bot_status})
+                socketio.emit('update', {'typed': symbols_typed, 'left': total_symbols - symbols_typed, 'status': client_status[client_id]}, room=client_id)
 
             # Introduce delay between keystrokes
             time.sleep(random.uniform(self.delay_min, self.delay_max))
 
-def start_typing_task(task_url, cookies_file, req_cps):
-    global bot_status
+def start_typing_task(task_url, cookies_file, req_cps, client_id):
+    global total_symbols
     driver = None
     html_file_path = f"output_{random.randint(1, 10000)}.html"  # Path to save the HTML file
 
     try:
-        bot_status = "Running... (Setting options)"
-        socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
-        socketio.emit('extracted', {'text': 'not loaded yet'})
-        
+        # Set client status to Running
+        client_status[client_id] = "Running... (Setting options)"
+        socketio.emit('update', {'typed': 0, 'left': 0, 'status': client_status[client_id]}, room=client_id)
+
         chrome_options = ChromeOptions()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
@@ -111,13 +111,13 @@ def start_typing_task(task_url, cookies_file, req_cps):
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--js-flags=--max_old_space_size=512")
 
-        bot_status = "Running... (Running browser | options= --headless)"
-        socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
-        
+        client_status[client_id] = "Running... (Running browser | options= --headless)"
+        socketio.emit('update', {'typed': 0, 'left': 0, 'status': client_status[client_id]}, room=client_id)
+
         driver = webdriver.Chrome(options=chrome_options)
 
-        bot_status = "Running... (Opening page)"
-        socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
+        client_status[client_id] = "Running... (Opening page)"
+        socketio.emit('update', {'typed': 0, 'left': 0, 'status': client_status[client_id]}, room=client_id)
         driver.get(task_url)
 
         if os.path.exists(cookies_file):
@@ -129,38 +129,38 @@ def start_typing_task(task_url, cookies_file, req_cps):
         driver.get(task_url)
 
         time.sleep(2)
-        bot_status = "Running... (Extracting text)"
-        socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
-        
+        client_status[client_id] = "Running... (Extracting text)"
+        socketio.emit('update', {'typed': 0, 'left': 0, 'status': client_status[client_id]}, room=client_id)
+
         target_div = driver.find_element(By.CLASS_NAME, "typable")  # Replace "typable" with the correct selector if needed.
         html_content = target_div.get_attribute('outerHTML')
         text_to_type = extract_text_from_html(html_content)
-        socketio.emit('extracted', {'text': text_to_type})
+        socketio.emit('extracted', {'text': text_to_type}, room=client_id)
 
         # Create a download link
         download_link = f"/download/{html_file_path}"
-        socketio.emit('download_link', {'link': download_link})
+        socketio.emit('download_link', {'link': download_link}, room=client_id)
 
-        bot_status = "Running... (Typing!)"
-        socketio.emit('update', {'typed': 0, 'left': len(text_to_type), 'status': bot_status})
+        client_status[client_id] = "Running... (Typing!)"
+        socketio.emit('update', {'typed': 0, 'left': len(text_to_type), 'status': client_status[client_id]}, room=client_id)
 
         typer = Typer(req_cps)
-        typer.type_text(text_to_type, driver)  # Call type_text with the driver
+        typer.type_text(text_to_type, driver, client_id)  # Call type_text with the driver and client_id
         
     except Exception as e:
         print(f"Error in typing task: {e}")
-        bot_status = "Error"
-        socketio.emit('error', {'message': str(e), 'status': bot_status})
+        client_status[client_id] = "Error"
+        socketio.emit('error', {'message': str(e), 'status': client_status[client_id]}, room=client_id)
     finally:
         if driver:
-            socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': 'Waiting for results...'})
+            socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': 'Waiting for results...'}, room=client_id)
             time.sleep(15)
             # Save the HTML content to a file
             with open(html_file_path, 'w', encoding='utf-8') as f:
                 f.write(driver.page_source)
             driver.quit()
-            bot_status = f"Finished ({download_link})"
-            socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': bot_status})
+            client_status[client_id] = f"Finished ({download_link})"
+            socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': client_status[client_id]}, room=client_id)
 
 @app.route('/')
 def index():
@@ -172,11 +172,11 @@ def whypage():
 
 @app.route('/start', methods=['POST'])
 def start_bot():
-    global bot_status
+    client_id = request.sid  # Get the unique session ID of the client
 
-    # Check if the bot is already running
-    if bot_status != "Idle":
-        socketio.emit('error', {'message': 'A typing task is already running. Please wait until it finishes. Maybe someone else is typing now?'})
+    # Check if the bot is already running for this client
+    if client_id in client_status and client_status[client_id] != "Idle":
+        socketio.emit('error', {'message': 'A typing task is already running. Please wait until it finishes. Maybe someone else is typing now?'}, room=client_id)
         return jsonify({'message': 'A typing task is already running. Please wait until it finishes. Maybe someone else is typing now?'}), 400
 
     if 'cookies' not in request.files or 'task_link' not in request.form:
@@ -190,13 +190,13 @@ def start_bot():
     cookies_file.save(cookies_file_path)
 
     # Start the typing task in the background
-    socketio.start_background_task(start_typing_task, task_link, cookies_file_path, req_cps)
+    socketio.start_background_task(start_typing_task, task_link, cookies_file_path, req_cps, client_id)
     return jsonify({'message': 'Bot started successfully!'})
 
 @app.route('/status', methods=['GET'])
 def get_status():
-    global bot_status
-    return jsonify({'status': bot_status})
+    client_id = request.sid  # Get the unique session ID of the client
+    return jsonify({'status': client_status.get(client_id, "Idle")})
 
 @app.route('/download/<filename>')
 def download_file(filename):
