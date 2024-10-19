@@ -1,9 +1,15 @@
+import asyncio
+from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask_socketio import SocketIO, emit
+import json
+import os
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import time
+import random
+from bs4 import BeautifulSoup
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.options import Options as ChromeOptions
-from selenium.webdriver.chrome.service import Service as ChromeService
 import sys
 
 app = Flask(__name__)
@@ -91,38 +97,27 @@ def start_typing_task(task_url, cookies_file, req_cps):
         bot_status = "Running... (Setting options)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         socketio.emit('extracted', {'text': 'not loaded yet'})
-
-        # Set capabilities for Internet Explorer
-        capabilities = DesiredCapabilities.INTERNETEXPLORER.copy()
-        capabilities['ignoreProtectedModeSettings'] = True  # Ignore protected mode settings
-
-        bot_status = "Running... (Running browser)"
-        socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
-
-        # Set up Chrome options
-        chrome_options = ChromeOptions()
+        
+        chrome_options = webdriver.ChromeOptions()
+        '''
         chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--disk-cache-size=1")
-        chrome_options.add_argument("--disk-cache-size=10")
         chrome_options.add_argument("--disable-extensions")
-        chrome_options.add_argument("--single-process")
-        chrome_options.add_argument("--window-size=320,240")
         chrome_options.add_argument("--disable-application-cache")
+        chrome_options.add_argument("--disk-cache-size=1")
+        chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--js-flags=--max_old_space_size=128")
+        chrome_options.add_argument("--force-device-scale-factor=1")
+        '''
 
         bot_status = "Running... (Running browser | options= --headless)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
-
-        # Initialize the Chrome driver with the specified options
-        driver = webdriver.Chrome(service=ChromeService(), options=options)
+        
+        driver = webdriver.Remote(desired_capabilities=webdriver.DesiredCapabilities.HTMLUNIT)
 
         bot_status = "Running... (Opening page)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         driver.get(task_url)
 
-        # Load cookies if they exist
         if os.path.exists(cookies_file):
             with open(cookies_file, 'r') as f:
                 cookies = json.load(f)
@@ -134,7 +129,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
         time.sleep(2)
         bot_status = "Running... (Extracting text)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
-
+        
         target_div = driver.find_element(By.CLASS_NAME, "typable")  # Replace "typable" with the correct selector if needed.
         html_content = target_div.get_attribute('outerHTML')
         text_to_type = extract_text_from_html(html_content)
@@ -149,7 +144,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
 
         typer = Typer(req_cps)
         typer.type_text(text_to_type, driver)  # Call type_text with the driver
-
+        
     except Exception as e:
         print(f"Error in typing task: {e}")
         bot_status = "Error"
