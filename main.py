@@ -89,7 +89,7 @@ class Typer:
                 socketio.emit('update', {'typed': symbols_typed, 'left': total_symbols - symbols_typed, 'status': bot_status})
 
             # Introduce delay between keystrokes
-            asyncio.sleep(random.uniform(self.delay_min, self.delay_max))
+            time.sleep(random.uniform(self.delay_min, self.delay_max))
 
 def start_typing_task(task_url, cookies_file, req_cps):
     global bot_status
@@ -104,7 +104,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
         chrome_options = ChromeOptions()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--disk-cache-size=64")
+        chrome_options.add_argument("--disk-cache-size=128")
         chrome_options.add_argument("--disable-extensions")
         chrome_options.add_argument("--single-process")
         chrome_options.add_argument("--window-size=620,480")
