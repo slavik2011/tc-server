@@ -204,7 +204,7 @@ def send_requests(duration, cookies, url):
     url2 = 'https://tracking.rosettastone.com/ee/ce/lausd8264/users/4258406/path_step_scores?course=SK-ENG-L5-NA-PE-NA-NA-Y-3&unit_index=0&lesson_index=3&path_type=general&occurrence=1&method=get'
     url3 = 'https://tracking.rosettastone.com/ee/ce/lausd8264/users/4258406/path_step_scores?course=SK-ENG-L5-NA-PE-NA-NA-Y-3&unit_index=0&lesson_index=3&path_type=general&occurrence=1&path_step_media_id=PATHSTEP_160529222&_method=put'
     url4 = 'https://tracking.rosettastone.com/ee/ce/lausd8264/users/4258406/lag_alarms'
-    url5 - 'https://tracking.rosettastone.com/ee/ce/lausd8264/users/4258406/path_scores?course=SK-ENG-L5-NA-PE-NA-NA-Y-3&unit_index=0&lesson_index=3&path_type=general&occurrence=1&_method=put'
+    url5 = 'https://tracking.rosettastone.com/ee/ce/lausd8264/users/4258406/path_scores?course=SK-ENG-L5-NA-PE-NA-NA-Y-3&unit_index=0&lesson_index=3&path_type=general&occurrence=1&_method=put'
     time_left = duration
     successful_requests = 0  # Counter for successful requests
     unsuccessful_requests = 0  # Counter for unsuccessful requests
