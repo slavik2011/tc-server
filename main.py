@@ -57,7 +57,7 @@ class Typer:
         self.cps = cps
         print(f'Delays set to: min={self.delay_min}, max={self.delay_max}')
 
-    async def type_text(self, text: str, driver):
+    def type_text(self, text: str, driver):
         global bot_status, total_symbols
         symbols_typed = 0
         total_symbols = len(text)
@@ -86,12 +86,12 @@ class Typer:
 
             # Emit an update every 30 characters
             if symbols_typed % (self.cps // 2) == 0:
-                await socketio.emit('update', {'typed': symbols_typed, 'left': total_symbols - symbols_typed, 'status': bot_status})
+                socketio.emit('update', {'typed': symbols_typed, 'left': total_symbols - symbols_typed, 'status': bot_status})
 
             # Introduce delay between keystrokes
-            await asyncio.sleep(random.uniform(self.delay_min, self.delay_max))
+            asyncio.sleep(random.uniform(self.delay_min, self.delay_max))
 
-async def start_typing_task(task_url, cookies_file, req_cps):
+def start_typing_task(task_url, cookies_file, req_cps):
     global bot_status
     driver = None
     html_file_path = f"output_{random.randint(1, 10000)}.html"  # Path to save the HTML file
@@ -130,7 +130,7 @@ async def start_typing_task(task_url, cookies_file, req_cps):
                         driver.add_cookie(cookie)
         driver.get(task_url)
 
-        await asyncio.sleep(2)
+        time.sleep(2)
         bot_status = "Running... (Extracting text)"
         socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         
@@ -144,17 +144,17 @@ async def start_typing_task(task_url, cookies_file, req_cps):
 
         # Start typing using the Typer class
         typer = Typer(req_cps)
-        await typer.type_text(text_to_type, driver)  # Call type_text with the driver
+        typer.type_text(text_to_type, driver)  # Call type_text with the driver
 
     except Exception as e:
         print(f"Error in typing task: {e}")
         bot_status = "Error"
-        await socketio.emit('error', {'message': str(e), 'status': bot_status})
+        socketio.emit('error', {'message': str(e), 'status': bot_status})
     finally:
         if driver:
             for i in range(10):
                 bot_status = f"Waiting for results ({10-i} seconds)..."
-                await asyncio.sleep(1)
+                time.sleep(1)
             # Save the HTML content to a file
             with open(html_file_path, 'w', encoding='utf-8') as f:
                 try:
@@ -164,10 +164,10 @@ async def start_typing_task(task_url, cookies_file, req_cps):
             driver.quit()
 
             # Emit the download link and final status update
-            await socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': 'Finished'})
+            socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': 'Finished'})
             bot_status = "Idle"
         else:
-            await socketio.emit('error', {'message': 'NO DRIVER!', 'status': 'Error'})
+            socketio.emit('error', {'message': 'NO DRIVER!', 'status': 'Error'})
 
 @app.route('/')
 def index():
@@ -178,7 +178,7 @@ def whypage():
     return render_template('why.html')
 
 @app.route('/start', methods=['POST'])
-async def start_bot():
+def start_bot():
     global bot_status
 
     # Check if the bot is already running
@@ -197,7 +197,7 @@ async def start_bot():
     cookies_file.save(cookies_file_path)
 
     # Start the typing task in the background
-    socketio.start_background_task(asyncio.create_task(start_typing_task(task_link, cookies_file_path, req_cps)))
+    socketio.start_background_task(start_typing_task, task_link, cookies_file_path, req_cps)
     return jsonify({'message': 'Bot started successfully!'})
     
 def send_requests(duration, cookies, url):
