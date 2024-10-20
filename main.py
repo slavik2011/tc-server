@@ -98,8 +98,8 @@ async def start_typing_task(task_url, cookies_file, req_cps):
 
     try:
         bot_status = "Running... (Setting options)"
-        await socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
-        await socketio.emit('extracted', {'text': 'not loaded yet'})
+        socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
+        socketio.emit('extracted', {'text': 'not loaded yet'})
         
         chrome_options = ChromeOptions()
         chrome_options.add_argument("--headless")
@@ -113,12 +113,12 @@ async def start_typing_task(task_url, cookies_file, req_cps):
         chrome_options.add_argument("--js-flags=--max_old_space_size=512")
 
         bot_status = "Running... (Running browser | options= --headless)"
-        await socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
+        socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         
         driver = webdriver.Chrome(options=chrome_options)
 
         bot_status = "Running... (Opening page)"
-        await socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
+        socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         driver.get(task_url)
 
         # Load cookies if provided
@@ -132,15 +132,15 @@ async def start_typing_task(task_url, cookies_file, req_cps):
 
         await asyncio.sleep(2)
         bot_status = "Running... (Extracting text)"
-        await socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
+        socketio.emit('update', {'typed': 0, 'left': 0, 'status': bot_status})
         
         # Extract the text from the located div
         target_div = driver.find_element(By.CLASS_NAME, "typable")  # Replace "typable" with the correct selector if needed.
         html_content = target_div.get_attribute('outerHTML')
         text_to_type = extract_text_from_html(html_content)
-        await socketio.emit('extracted', {'text': text_to_type.replace('в', '\n')})
+        socketio.emit('extracted', {'text': text_to_type.replace('в', '\n')})
         bot_status = "Running... (Typing!)"
-        await socketio.emit('update', {'typed': 0, 'left': len(text_to_type), 'status': bot_status})
+        socketio.emit('update', {'typed': 0, 'left': len(text_to_type), 'status': bot_status})
 
         # Start typing using the Typer class
         typer = Typer(req_cps)
@@ -204,6 +204,7 @@ def send_requests(duration, cookies, url):
     url2 = 'https://tracking.rosettastone.com/ee/ce/lausd8264/users/4258406/path_step_scores?course=SK-ENG-L5-NA-PE-NA-NA-Y-3&unit_index=0&lesson_index=3&path_type=general&occurrence=1&method=get'
     url3 = 'https://tracking.rosettastone.com/ee/ce/lausd8264/users/4258406/path_step_scores?course=SK-ENG-L5-NA-PE-NA-NA-Y-3&unit_index=0&lesson_index=3&path_type=general&occurrence=1&path_step_media_id=PATHSTEP_160529222&_method=put'
     url4 = 'https://tracking.rosettastone.com/ee/ce/lausd8264/users/4258406/lag_alarms'
+    url5 - 'https://tracking.rosettastone.com/ee/ce/lausd8264/users/4258406/path_scores?course=SK-ENG-L5-NA-PE-NA-NA-Y-3&unit_index=0&lesson_index=3&path_type=general&occurrence=1&_method=put'
     time_left = duration
     successful_requests = 0  # Counter for successful requests
     unsuccessful_requests = 0  # Counter for unsuccessful requests
@@ -279,6 +280,30 @@ def send_requests(duration, cookies, url):
             options_response = requests.options(url4, cookies=cookies)
             print('OPTIONS Response Status Code:', options_response.status_code)
             socketio.emit('update', {'message': 'OPTIONS request sent (#4)', 'status_code': options_response.status_code})
+
+            # Check response status and update the counter
+            if options_response.status_code == 200:
+                successful_requests += 1
+            else:
+                unsuccessful_requests += 1
+
+        except Exception as e:
+            print(f'Error sending OPTIONS request: {e}')
+            socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})
+            unsuccessful_requests += 1  # Increment unsuccessful counter
+
+        try:
+            params = {
+                'course': 'SK-ENG-L5-NA-PE-NA-NA-Y-3',
+                'unit_index': '0',
+                'lesson_index': '3',
+                'path_type': 'general',
+                'occurrence': '1',
+                'method': 'get'
+            }
+            options_response = requests.options(url5, cookies=cookies, params=params)
+            print('OPTIONS Response Status Code:', options_response.status_code)
+            socketio.emit('update', {'message': 'OPTIONS request sent (#5)', 'status_code': options_response.status_code})
 
             # Check response status and update the counter
             if options_response.status_code == 200:
