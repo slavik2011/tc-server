@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Client</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        form {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 10px;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #response {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>API Client</h1>
+    <form id="apiForm">
+        <label for="method">Request Method:</label>
+        <select id="method">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+            <option value="PATCH">PATCH</option>
+            <option value="OPTIONS">OPTIONS</option>
+            <option value="HEAD">HEAD</option>
+        </select>
+
+        <label for="url">API URL:</label>
+        <input type="text" id="url" placeholder="e.g., /api/resource/1" required>
+
+        <label for="body">Request Body (JSON):</label>
+        <textarea id="body" rows="4" placeholder='{"name": "Item 1"}'></textarea>
+
+        <button type="submit">Send Request</button>
+    </form>
+
+    <div id="response" style="display:none;"></div>
+
+    <script>
+        document.getElementById('apiForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const method = document.getElementById('method').value;
+            const url = document.getElementById('url').value;  // Use relative URL
+            const body = document.getElementById('body').value;
+
+            const options = {
+                method: method,
+                url: url,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                data: method !== 'GET' && method !== 'HEAD' ? (body ? JSON.parse(body) : {}) : null
+            };
+
+            axios(options)
+                .then(response => {
+                    const responseDiv = document.getElementById('response');
+                    responseDiv.style.display = 'block';
+                    responseDiv.innerText = JSON.stringify(response.data, null, 2);
+                })
+                .catch(error => {
+                    const responseDiv = document.getElementById('response');
+                    responseDiv.style.display = 'block';
+                    responseDiv.innerText = JSON.stringify(error.response ? error.response.data : error.message, null, 2);
+                });
+        });
+    </script>
+</body>
+</html>
