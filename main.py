@@ -178,7 +178,7 @@ def whypage():
     return render_template('why.html')
 
 @app.route('/postman')
-def whypage():
+def postman():
     return render_template('postman.html')
 
 @app.route('/api/resource/<int:item_id>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'])
