@@ -67,15 +67,13 @@
             <option value="PUT">PUT</option>
             <option value="DELETE">DELETE</option>
             <option value="PATCH">PATCH</option>
-            <option value="OPTIONS">OPTIONS</option>
-            <option value="HEAD">HEAD</option>
         </select>
 
         <label for="url">API URL:</label>
-        <input type="text" id="url" placeholder="e.g., /api/resource/1" required>
+        <input type="text" id="url" placeholder="e.g., https://jsonplaceholder.typicode.com/posts" required>
 
         <label for="body">Request Body (JSON):</label>
-        <textarea id="body" rows="4" placeholder='{"name": "Item 1"}'></textarea>
+        <textarea id="body" rows="4" placeholder='{"title": "foo", "body": "bar", "userId": 1}'></textarea>
 
         <button type="submit">Send Request</button>
     </form>
@@ -87,16 +85,17 @@
             event.preventDefault();
 
             const method = document.getElementById('method').value;
-            const url = document.getElementById('url').value;  // Use relative URL
+            const url = document.getElementById('url').value; // Use absolute URL
             const body = document.getElementById('body').value;
 
             const options = {
-                method: method,
-                url: url,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                data: method !== 'GET' && method !== 'HEAD' ? (body ? JSON.parse(body) : {}) : null
+                method: 'POST',
+                url: '/api/send',
+                data: {
+                    method: method,
+                    url: url,
+                    body: body ? JSON.parse(body) : {}
+                }
             };
 
             axios(options)
