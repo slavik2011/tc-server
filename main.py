@@ -177,6 +177,75 @@ def index():
 def whypage():
     return render_template('why.html')
 
+@app.route('/postman')
+def whypage():
+    return render_template('postman.html')
+
+@app.route('/api/resource/<int:item_id>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'])
+def resource(item_id):
+    if request.method == 'GET':
+        # Retrieve an item
+        item = data_store.get(item_id)
+        if item is None:
+            return jsonify({"error": "Item not found"}), 404
+        return jsonify({"id": item_id, "data": item}), 200
+
+    elif request.method == 'POST':
+        # Create a new item
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        # Store the data in the in-memory store
+        data_store[item_id] = data
+        return jsonify({"status": "success", "id": item_id, "data": data}), 201
+
+    elif request.method == 'PUT':
+        # Update an existing item
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        if item_id not in data_store:
+            return jsonify({"error": "Item not found"}), 404
+        
+        data_store[item_id] = data
+        return jsonify({"status": "success", "id": item_id, "data": data}), 200
+
+    elif request.method == 'DELETE':
+        # Delete an item
+        if item_id in data_store:
+            del data_store[item_id]
+            return jsonify({"status": "success", "id": item_id}), 204
+        else:
+            return jsonify({"error": "Item not found"}), 404
+
+    elif request.method == 'PATCH':
+        # Partially update an existing item
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        if item_id not in data_store:
+            return jsonify({"error": "Item not found"}), 404
+        
+        # Update the existing item with the new data
+        data_store[item_id].update(data)
+        return jsonify({"status": "success", "id": item_id, "data": data_store[item_id]}), 200
+
+    elif request.method == 'OPTIONS':
+        # Return allowed methods for the resource
+        return jsonify({"allowed_methods": ["GET", "POST", "PUT", "DELETE", "PATCH"]}), 200
+
+    elif request.method == 'HEAD':
+        # Return headers for the resource
+        if item_id in data_store:
+            return jsonify(), 200
+        else:
+            return jsonify({"error": "Item not found"}), 404
+
+    return jsonify({"error": "Method not allowed"}), 405
+
 @app.route('/start', methods=['POST'])
 def start_bot():
     global bot_status
