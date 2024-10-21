@@ -203,7 +203,14 @@ def send_request():
         else:
             return jsonify({"error": "Unsupported method"}), 400
 
-        return jsonify(response.json()), response.status_code
+        # Check response type
+        try:
+            response_json = response.json()
+            return jsonify(response_json), response.status_code
+        except ValueError:
+            # If response is not JSON, return it as text
+            return response.text, response.status_code
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
