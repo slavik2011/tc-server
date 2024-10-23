@@ -12,6 +12,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 import sys, time
 import requests, threading
+from flask import after_this_request
 
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode='threading')  # Change async_mode to 'eventlet' for asyncio support
@@ -390,9 +391,27 @@ def get_status():
     global bot_status
     return jsonify({'status': bot_status})
 
+from flask import after_this_request
+
 @app.route('/download/<filename>')
 def download_file(filename):
+    file_path = os.path.join('.', filename)
+
+    # Check if the file is a log file for either typing or rs logs
+    if (filename.startswith('typing_session_') or filename.startswith('session_')) and filename.endswith('.txt'):
+        
+        @after_this_request
+        def remove_file(response):
+            try:
+                os.remove(file_path)  # Remove the file after the response is sent
+                print(f"Deleted file: {file_path}")
+            except Exception as e:
+                print(f"Error deleting file: {e}")
+            return response
+
+    # Send the file to the client for download
     return send_from_directory(directory='.', path=filename, as_attachment=True)
+
 
 if __name__ == '__main__':
     socketio.run(app, port=int(sys.argv[1]), host='0.0.0.0')
