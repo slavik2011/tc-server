@@ -262,9 +262,11 @@ def send_requests(duration, cookies, url):
             # Send OPTIONS request with cookies
             try:
                 options_response = requests.options(url, cookies=cookies)
+                response_text = options_response.text  # Capture the response text
                 log_file.write(f"URL: {url}\n")
                 log_file.write(f"Response Status: {options_response.status_code}\n")
-                log_file.write(f"Response Time: {time.ctime()}\n\n")
+                log_file.write(f"Response Time: {time.ctime()}\n")
+                log_file.write(f"Response Text: {response_text}\n\n")  # Write the response text
 
                 # Emit updates to the client
                 socketio.emit('update', {'message': 'OPTIONS request sent (#1)', 'status_code': options_response.status_code})
@@ -281,14 +283,15 @@ def send_requests(duration, cookies, url):
                 unsuccessful_requests += 1  # Increment unsuccessful counter
 
             # Repeat for other URLs (url2, url3, url4, url5)
-            # The code below follows the same pattern, logging the response from each URL.
             urls = [url2, url3, url4, url5]
             for i, request_url in enumerate(urls, start=2):
                 try:
                     options_response = requests.options(request_url, cookies=cookies)
+                    response_text = options_response.text  # Capture the response text
                     log_file.write(f"URL: {request_url}\n")
                     log_file.write(f"Response Status: {options_response.status_code}\n")
-                    log_file.write(f"Response Time: {time.ctime()}\n\n")
+                    log_file.write(f"Response Time: {time.ctime()}\n")
+                    log_file.write(f"Response Text: {response_text}\n\n")  # Write the response text
 
                     # Emit updates to the client
                     socketio.emit('update', {'message': f'OPTIONS request sent (#{i})', 'status_code': options_response.status_code})
@@ -326,6 +329,7 @@ def send_requests(duration, cookies, url):
     socketio.emit('update', {
         'message': f'Session completed. Download the session log: /download/{session_filename}'
     })
+
 
 @app.route('/rs')
 def rs_page():
