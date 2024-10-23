@@ -238,6 +238,7 @@ def start_bot():
     return jsonify({'message': 'Bot started successfully!'})
     
 def send_requests(duration, cookies, url):
+    global bot_status
     url2 = 'https://tracking.rosettastone.com/ee/ce/lausd8264/users/4258406/path_step_scores?course=SK-ENG-L5-NA-PE-NA-NA-Y-3&unit_index=0&lesson_index=3&path_type=general&occurrence=1&method=get'
     url3 = 'https://tracking.rosettastone.com/ee/ce/lausd8264/users/4258406/path_step_scores?course=SK-ENG-L5-NA-PE-NA-NA-Y-3&unit_index=0&lesson_index=3&path_type=general&occurrence=1&path_step_media_id=PATHSTEP_160529222&_method=put'
     url4 = 'https://tracking.rosettastone.com/ee/ce/lausd8264/users/4258406/lag_alarms'
@@ -246,124 +247,86 @@ def send_requests(duration, cookies, url):
     successful_requests = 0  # Counter for successful requests
     unsuccessful_requests = 0  # Counter for unsuccessful requests
 
-    while time_left >= 0:
-        # Send OPTIONS request with cookies
-        try:
-            options_response = requests.options(url, cookies=cookies)
-            print('OPTIONS Response Status Code:', options_response.status_code)
-            socketio.emit('update', {'message': 'OPTIONS request sent (#1)', 'status_code': options_response.status_code})
+    # Create a unique filename for each session
+    session_id = random.randint(1, 10000)
+    session_filename = f"session_{session_id}.txt"
+    session_filepath = os.path.join('.', session_filename)
 
-            # Check response status and update the counter
-            if options_response.status_code == 200:
-                successful_requests += 1
-            else:
-                unsuccessful_requests += 1
+    # Open the file to log responses
+    with open(session_filepath, 'w', encoding='utf-8') as log_file:
+        log_file.write(f"Session ID: {session_id}\n")
+        log_file.write(f"Duration: {duration} seconds\n")
+        log_file.write(f"Start Time: {time.ctime()}\n\n")
 
-        except Exception as e:
-            print(f'Error sending OPTIONS request: {e}')
-            socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})
-            unsuccessful_requests += 1  # Increment unsuccessful counter
+        while time_left >= 0:
+            # Send OPTIONS request with cookies
+            try:
+                options_response = requests.options(url, cookies=cookies)
+                log_file.write(f"URL: {url}\n")
+                log_file.write(f"Response Status: {options_response.status_code}\n")
+                log_file.write(f"Response Time: {time.ctime()}\n\n")
 
-        try:
-            params = {
-                'course': 'SK-ENG-L5-NA-PE-NA-NA-Y-3',
-                'unit_index': '0',
-                'lesson_index': '3',
-                'path_type': 'general',
-                'occurrence': '1',
-                'method': 'get'
-            }
-            options_response = requests.options(url2, cookies=cookies, params=params)
-            print('OPTIONS Response Status Code:', options_response.status_code)
-            socketio.emit('update', {'message': 'OPTIONS request sent (#2)', 'status_code': options_response.status_code})
+                # Emit updates to the client
+                socketio.emit('update', {'message': 'OPTIONS request sent (#1)', 'status_code': options_response.status_code})
 
-            # Check response status and update the counter
-            if options_response.status_code == 200:
-                successful_requests += 1
-            else:
-                unsuccessful_requests += 1
+                # Check response status and update the counter
+                if options_response.status_code == 200:
+                    successful_requests += 1
+                else:
+                    unsuccessful_requests += 1
 
-        except Exception as e:
-            print(f'Error sending OPTIONS request: {e}')
-            socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})
-            unsuccessful_requests += 1  # Increment unsuccessful counter
+            except Exception as e:
+                log_file.write(f"Error sending OPTIONS request: {e}\n")
+                socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})
+                unsuccessful_requests += 1  # Increment unsuccessful counter
 
-        try:
-            params = {
-                'course': 'SK-ENG-L5-NA-PE-NA-NA-Y-3',
-                'unit_index': '0',
-                'lesson_index': '3',
-                'path_type': 'general',
-                'occurrence': '1',
-                'path_step_media_id': 'PATHSTEP_160529222',
-                'method': 'get'
-            }
-            options_response = requests.options(url3, cookies=cookies, params=params)
-            print('OPTIONS Response Status Code:', options_response.status_code)
-            socketio.emit('update', {'message': 'OPTIONS request sent (#3)', 'status_code': options_response.status_code})
+            # Repeat for other URLs (url2, url3, url4, url5)
+            # The code below follows the same pattern, logging the response from each URL.
+            urls = [url2, url3, url4, url5]
+            for i, request_url in enumerate(urls, start=2):
+                try:
+                    options_response = requests.options(request_url, cookies=cookies)
+                    log_file.write(f"URL: {request_url}\n")
+                    log_file.write(f"Response Status: {options_response.status_code}\n")
+                    log_file.write(f"Response Time: {time.ctime()}\n\n")
 
-            # Check response status and update the counter
-            if options_response.status_code == 200:
-                successful_requests += 1
-            else:
-                unsuccessful_requests += 1
+                    # Emit updates to the client
+                    socketio.emit('update', {'message': f'OPTIONS request sent (#{i})', 'status_code': options_response.status_code})
 
-        except Exception as e:
-            print(f'Error sending OPTIONS request: {e}')
-            socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})
-            unsuccessful_requests += 1  # Increment unsuccessful counter
+                    # Check response status and update the counter
+                    if options_response.status_code == 200:
+                        successful_requests += 1
+                    else:
+                        unsuccessful_requests += 1
 
-        try:
-            options_response = requests.options(url4, cookies=cookies)
-            print('OPTIONS Response Status Code:', options_response.status_code)
-            socketio.emit('update', {'message': 'OPTIONS request sent (#4)', 'status_code': options_response.status_code})
+                except Exception as e:
+                    log_file.write(f"Error sending OPTIONS request to {request_url}: {e}\n")
+                    socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})
+                    unsuccessful_requests += 1
 
-            # Check response status and update the counter
-            if options_response.status_code == 200:
-                successful_requests += 1
-            else:
-                unsuccessful_requests += 1
+            # Emit the counts of successful and unsuccessful requests
+            socketio.emit('update', {
+                'message': f'Time remaining: {time_left} seconds',
+                'successful_requests': successful_requests,
+                'unsuccessful_requests': unsuccessful_requests,
+                'req_status': 'Running'
+            })
 
-        except Exception as e:
-            print(f'Error sending OPTIONS request: {e}')
-            socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})
-            unsuccessful_requests += 1  # Increment unsuccessful counter
+            time.sleep(5)  # Wait for 5 seconds before the next request
+            time_left -= 5
+            print(f'Time remaining: {time_left} seconds')
 
-        try:
-            params = {
-                'course': 'SK-ENG-L5-NA-PE-NA-NA-Y-3',
-                'unit_index': '0',
-                'lesson_index': '3',
-                'path_type': 'general',
-                'occurrence': '1',
-                'method': 'get'
-            }
-            options_response = requests.options(url5, cookies=cookies, params=params)
-            print('OPTIONS Response Status Code:', options_response.status_code)
-            socketio.emit('update', {'message': 'OPTIONS request sent (#5)', 'status_code': options_response.status_code})
+        # Emit the completion of the session
+        socketio.emit('update', {'message': 'Session finished', 'status_code': 200})
+        log_file.write(f"Session Completed at: {time.ctime()}\n")
+        log_file.write(f"Total Successful Requests: {successful_requests}\n")
+        log_file.write(f"Total Unsuccessful Requests: {unsuccessful_requests}\n")
 
-            # Check response status and update the counter
-            if options_response.status_code == 200:
-                successful_requests += 1
-            else:
-                unsuccessful_requests += 1
-
-        except Exception as e:
-            print(f'Error sending OPTIONS request: {e}')
-            socketio.emit('error', {'message': f'Error sending OPTIONS request: {e}'})
-            unsuccessful_requests += 1  # Increment unsuccessful counter
-
-        # Emit the counts of successful and unsuccessful requests
-        socketio.emit('update', {
-            'message': f'Time remaining: {time_left} seconds',
-            'successful_requests': successful_requests,
-            'unsuccessful_requests': unsuccessful_requests,
-            'req_status': 'Useless for now'
-        })
-
-        time.sleep(5)  # Wait for 5 seconds before the next request
-        time_left -= 5
-        print(f'Time remaining: {time_left} seconds')
+    # Emit the link for the download of the session file
+    socketio.emit('update', {
+        'message': f'Session completed. Download the session log:',
+        'download_link': f'/download/{session_filename}'
+    })
 
 @app.route('/rs')
 def rs_page():
