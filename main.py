@@ -184,8 +184,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
             socketio.emit('update', {
                 'typed': total_symbols,
                 'left': 0,
-                'status': 'Finished',
-                'message': f'Typing session completed. Download the log here: /download/{session_filename}'
+                'status': f'Finished /download/{session_filename}'
             })
             bot_status = "Idle"
         else:
