@@ -324,8 +324,7 @@ def send_requests(duration, cookies, url):
 
     # Emit the link for the download of the session file
     socketio.emit('update', {
-        'message': f'Session completed. Download the session log:',
-        'download_link': f'/download/{session_filename}'
+        'message': f'Session completed. Download the session log: /download/{session_filename}'
     })
 
 @app.route('/rs')
