@@ -51,10 +51,11 @@ def extract_text_from_html(html_content):
     return text
 
 class Typer:
-    def __init__(self, cps=5):
+    def __init__(self, cps=5, session_filename=None):
         self.delay_min = 1 / cps + random.uniform((1 / cps) / 100, 1 / cps)
         self.delay_max = 1 / cps + random.uniform((1 / cps) / 100, 1 / cps)
         self.cps = cps
+        self.session_filename = session_filename  # File to log each typed symbol and delay
         print(f'Delays set to: min={self.delay_min}, max={self.delay_max}')
 
     def type_text(self, text: str, driver):
@@ -68,33 +69,49 @@ class Typer:
         # Track the last character to avoid typing two spaces consecutively
         last_char = None
 
-        for char in text:
-            # Only type a space if it's not following another space
-            if char == " " and last_char == " ":
-                continue  # Skip duplicate spaces
+        # Open the session log file for writing
+        with open(self.session_filename, 'a', encoding='utf-8') as log_file:
+            start_time = time.time()
+            log_file.write(f"Typing Session Started: {time.ctime(start_time)}\n\n")
 
-            # Send the key to the page
-            if char == "в":
-                actions.send_keys(Keys.ENTER)
-            else:
-                actions.send_keys(char)
+            for char in text:
+                # Only type a space if it's not following another space
+                if char == " " and last_char == " ":
+                    continue  # Skip duplicate spaces
 
-            actions.perform()  # Perform the action on the page
+                # Send the key to the page
+                if char == "в":
+                    actions.send_keys(Keys.ENTER)
+                    log_file.write(f"Symbol: ENTER\n")  # Log ENTER
+                else:
+                    actions.send_keys(char)
+                    log_file.write(f"Symbol: {char}\n")  # Log the character
 
-            last_char = char  # Update last character
-            symbols_typed += 1
+                actions.perform()  # Perform the action on the page
 
-            # Emit an update every 30 characters
-            if symbols_typed % (self.cps // 2) == 0:
-                socketio.emit('update', {'typed': symbols_typed, 'left': total_symbols - symbols_typed, 'status': bot_status})
+                last_char = char  # Update last character
+                symbols_typed += 1
 
-            # Introduce delay between keystrokes
-            time.sleep(random.uniform(self.delay_min, self.delay_max))
+                # Introduce delay between keystrokes and log it
+                delay = random.uniform(self.delay_min, self.delay_max)
+                log_file.write(f"Delay before next symbol: {delay:.3f} seconds\n\n")
+                time.sleep(delay)
+
+                # Emit an update every 30 characters
+                if symbols_typed % (self.cps // 2) == 0:
+                    socketio.emit('update', {'typed': symbols_typed, 'left': total_symbols - symbols_typed, 'status': bot_status})
+
+            end_time = time.time()
+            time_spent = end_time - start_time
+            log_file.write(f"Typing Session Ended: {time.ctime(end_time)}\n")
+            log_file.write(f"Total Time Spent Typing: {time_spent:.2f} seconds\n")
 
 def start_typing_task(task_url, cookies_file, req_cps):
     global bot_status
     driver = None
-    html_file_path = f"output_{random.randint(1, 10000)}.html"  # Path to save the HTML file
+    session_id = random.randint(1, 10000)
+    session_filename = f"typing_session_{session_id}.txt"  # Path to save the log file
+    html_file_path = f"output_{session_id}.html"  # Path to save the HTML file
 
     try:
         bot_status = "Running... (Setting options)"
@@ -142,8 +159,8 @@ def start_typing_task(task_url, cookies_file, req_cps):
         bot_status = "Running... (Typing!)"
         socketio.emit('update', {'typed': 0, 'left': len(text_to_type), 'status': bot_status})
 
-        # Start typing using the Typer class
-        typer = Typer(req_cps)
+        # Start typing using the Typer class and log each typed character
+        typer = Typer(req_cps, session_filename)  # Pass the session filename to the Typer class
         typer.type_text(text_to_type, driver)  # Call type_text with the driver
 
     except Exception as e:
@@ -163,8 +180,13 @@ def start_typing_task(task_url, cookies_file, req_cps):
                     print(f"Error saving HTML: {e}")
             driver.quit()
 
-            # Emit the download link and final status update
-            socketio.emit('update', {'typed': total_symbols, 'left': 0, 'status': 'Finished'})
+            # Emit the final status update and the link to download the session log
+            socketio.emit('update', {
+                'typed': total_symbols,
+                'left': 0,
+                'status': 'Finished',
+                'message': f'Typing session completed. Download the log here: /download/{session_filename}'
+            })
             bot_status = "Idle"
         else:
             socketio.emit('error', {'message': 'NO DRIVER!', 'status': 'Error'})
