@@ -122,7 +122,7 @@ def start_typing_task(task_url, cookies_file, req_cps):
         chrome_options = ChromeOptions()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--disk-cache-size=512")
+        chrome_options.add_argument("--disk-cache-size=756")
         chrome_options.add_argument("--disable-extensions")
         chrome_options.add_argument("--single-process")
         chrome_options.add_argument("--window-size=620,480")
